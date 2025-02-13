@@ -2,11 +2,9 @@ import React from "react";
 
 export default function page() {
   return (
-    <div className="vh-100 bg-background-holidayz">
-      <h1 className="text-3xl">project exam 2</h1>
-      <div className="height-100vh">
-        <div>testing</div>
-        testing
+    <div className="vh-100 ">
+      <div className="bg-blue-200 p-12 rounded flex items-center justify-center">
+        <h1 className="text-3xl text- font-extrabold uppercase text-center">Venues</h1>
       </div>
     </div>
   );
