@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import LoginDrawer from "./LoginDrawer";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,9 +22,7 @@ const Navbar = () => {
           <Link href="/auth/register" className="green-button">
             Register
           </Link>
-          <Link href="/auth/login" className="gray-button">
-            Login
-          </Link>
+          <LoginDrawer />
         </div>
         <div className="md:hidden">
           <button onClick={toggleMenu} className="text-white focus:outline-none">
@@ -35,12 +34,10 @@ const Navbar = () => {
       </div>
       {isOpen && (
         <div className="md:hidden">
-          <Link href="/" className="green-button block mb-3 mt-3">
+          <Link href="/auth/register" className="green-button block mb-3 mt-3">
             Register
           </Link>
-          <Link href="" className="gray-button block">
-            Login
-          </Link>
+          <LoginDrawer />
         </div>
       )}
     </nav>
