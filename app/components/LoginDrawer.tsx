@@ -33,7 +33,7 @@ const LoginDrawer = () => {
         }}
         onClick={toggleDrawer}
       />
-      <div className={`fixed top-0 right-0 h-full w-64 bg-gray-700 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed top-0 right-0 h-full w-64 bg-gray-700 text-white shadow-lg transform transition-transform z-50 duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
         <div className="p-4">
           <h1 className="text-2xl font-bold mb-4">Login</h1>
           <form onSubmit={(e) => e.preventDefault()}>

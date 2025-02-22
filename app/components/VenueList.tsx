@@ -1,88 +1,88 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface Venue {
-  id: string
-  name: string
-  description: string
-  media: { url: string }[]
-  price: number
-  maxGuests: number
-  rating: number
-  created: string
-  updated: string
+  id: string;
+  name: string;
+  description: string;
+  media: { url: string }[];
+  price: number;
+  maxGuests: number;
+  rating: number;
+  created: string;
+  updated: string;
   meta: {
-    wifi: boolean
-    parking: boolean
-    breakfast: boolean
-    pets: boolean
-  }
+    wifi: boolean;
+    parking: boolean;
+    breakfast: boolean;
+    pets: boolean;
+  };
   location: {
-    address: string
-    city: string
-    zip: string
-    country: string
-    continent: string
-    lat: number
-    lng: number
-  }
+    address: string;
+    city: string;
+    zip: string;
+    country: string;
+    continent: string;
+    lat: number;
+    lng: number;
+  };
 }
 
 interface ApiResponse {
-  data: Venue[]
+  data: Venue[];
   meta: {
-    isSuccess: boolean
-    count: number
-    limit: number
-    offset: number
-  }
+    isSuccess: boolean;
+    count: number;
+    limit: number;
+    offset: number;
+  };
 }
 
-const API_BASE_URL = "https://v2.api.noroff.dev"
+const API_BASE_URL = "https://v2.api.noroff.dev";
 
 function getFullImageUrl(relativeUrl: string): string {
   if (relativeUrl.startsWith("http")) {
-    return relativeUrl
+    return relativeUrl;
   }
-  return `${API_BASE_URL}${relativeUrl}`
+  return `${API_BASE_URL}${relativeUrl}`;
 }
 
 export default function VenueList() {
-  const [venues, setVenues] = useState<Venue[]>([])
-  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
 
   useEffect(() => {
     async function fetchVenues() {
       try {
-        const res = await fetch(`${API_BASE_URL}/holidaze/venues`)
+        const res = await fetch(`${API_BASE_URL}/holidaze/venues`);
         if (!res.ok) {
-          throw new Error("Failed to fetch venues")
+          throw new Error("Failed to fetch venues");
         }
-        const data: ApiResponse = await res.json()
-        setVenues(data.data)
+        const data: ApiResponse = await res.json();
+        setVenues(data.data);
       } catch (error) {
-        console.error("Error fetching venues:", error)
+        console.error("Error fetching venues:", error);
       }
     }
 
-    fetchVenues()
-  }, [])
+    fetchVenues();
+  }, []);
 
   const handleVenueClick = (venue: Venue) => {
-    setSelectedVenue(venue)
-  }
+    setSelectedVenue(venue);
+  };
 
   if (venues.length === 0) {
-    return <div className="text-center text-gray-500">Loading venues...</div>
+    return <div className="text-center text-gray-500">Loading venues...</div>;
   }
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 z-0">
         {venues.map((venue) => (
           <Card key={venue.id} className="flex flex-col">
             <CardHeader>
@@ -100,8 +100,8 @@ export default function VenueList() {
                   style={{ objectFit: "cover" }}
                   className="rounded-md"
                   onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = "/placeholder.svg"
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/placeholder.svg";
                   }}
                 />
               </div>
@@ -114,12 +114,7 @@ export default function VenueList() {
               </div>
               <div className="flex items-center space-x-1">
                 <span className="text-sm">{venue.rating.toFixed(1)}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-5 h-5 text-yellow-500"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500">
                   <path
                     fillRule="evenodd"
                     d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
@@ -162,6 +157,5 @@ export default function VenueList() {
         </div>
       )}
     </div>
-  )
+  );
 }
-
