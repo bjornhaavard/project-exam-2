@@ -13,6 +13,11 @@ interface UserData {
     url: string;
     alt: string;
   };
+  banner?: {
+    url: string;
+    alt: string;
+  };
+  venueManager: boolean;
 }
 
 const Navbar = () => {
@@ -87,6 +92,21 @@ const Navbar = () => {
     router.push("/");
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isDropdownOpen && !target.closest(".profile-dropdown")) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   return (
     <nav className="bg-gray-800 shadow-xl p-8">
       <div className="container mx-auto flex justify-between items-center">
@@ -97,7 +117,7 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
-            <div className="relative">
+            <div className="relative profile-dropdown">
               <button onClick={toggleDropdown} className="flex items-center focus:outline-none" aria-expanded={isDropdownOpen} aria-haspopup="true">
                 <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-white">
                   {user.avatar?.url ? (
@@ -113,9 +133,18 @@ const Navbar = () => {
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
                   <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
-                    Profile
+                    View Profile
                   </Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link href="/profile/edit-images" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                    Update Profile Images
+                  </Link>
+                  {user.venueManager && (
+                    <Link href="/venues/create" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsDropdownOpen(false)}>
+                      Create Venue
+                    </Link>
+                  )}
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                     Logout
                   </button>
                 </div>
@@ -157,8 +186,16 @@ const Navbar = () => {
                 <span className="text-white">{user.name}</span>
               </div>
               <Link href="/profile" className="block w-full text-center py-2 text-white hover:bg-gray-700 rounded mb-2" onClick={() => setIsOpen(false)}>
-                Profile
+                View Profile
               </Link>
+              <Link href="/profile/edit-images" className="block w-full text-center py-2 text-white hover:bg-gray-700 rounded mb-2" onClick={() => setIsOpen(false)}>
+                Update Profile
+              </Link>
+              {user.venueManager && (
+                <Link href="/venues/create" className="gray-button" onClick={() => setIsOpen(false)}>
+                  Create Venue
+                </Link>
+              )}
               <button onClick={handleLogout} className="block w-full text-center py-2 text-white hover:bg-gray-700 rounded">
                 Logout
               </button>

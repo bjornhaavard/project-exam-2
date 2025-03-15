@@ -4,20 +4,34 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { API_CONFIG } from "@/app/api-config";
 
+interface Venue {
+  id: string;
+  name: string;
+  description: string;
+  media?: { url: string; alt: string }[];
+}
+
+interface Booking {
+  id: string;
+  dateFrom: string;
+  dateTo: string;
+  guests: number;
+  venue: {
+    id: string;
+    name: string;
+    description: string;
+    media?: { url: string; alt: string }[];
+  };
+}
+
 interface User {
   name: string;
   email: string;
   avatar?: { url: string; alt: string };
   banner?: { url: string; alt: string };
   venueManager: boolean;
-  venues?: { id: string; name: string; description: string; media?: { url: string; alt: string }[] }[];
-  bookings?: {
-    id: string;
-    dateFrom: string;
-    dateTo: string;
-    guests: number;
-    venue: { name: string; description: string; media?: { url: string; alt: string }[] };
-  }[];
+  venues?: Venue[];
+  bookings?: Booking[];
   _count?: {
     venues: number;
     bookings: number;
@@ -95,12 +109,23 @@ const ProfilePage = () => {
     fetchUserProfile();
   }, [router]);
 
+  // Function to navigate to venue details
+  const navigateToVenue = (venueId: string) => {
+    router.push(`/venues/${venueId}`);
+  };
+
+  // Function to navigate to venue details from a booking - fixed type definition
+  const navigateToBookingVenue = (booking: Booking) => {
+    if (booking.venue && booking.venue.id) {
+      router.push(`/venues/${booking.venue.id}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-8 flex justify-center items-center min-h-[50vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-lg">Loading your profile...</p>
         </div>
       </div>
     );
@@ -177,38 +202,38 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Venues Section */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">My Venues</h2>
-        {user.venues && user.venues.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {user.venues.map((venue) => (
-              <div key={venue.id} className="bg-white shadow-md rounded-lg overflow-hidden">
-                <div className="h-48 bg-gray-200 relative">
-                  {venue.media && venue.media.length > 0 ? (
-                    <Image src={venue.media[0].url || "/placeholder.svg"} alt={venue.media[0].alt || venue.name} fill className="object-cover" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
-                  )}
+      {/* Venues Section - Only show if user is a venue manager */}
+      {user.venueManager && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">My Venues</h2>
+          {user.venues && user.venues.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {user.venues.map((venue) => (
+                <div key={venue.id} className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigateToVenue(venue.id)}>
+                  <div className="h-48 bg-gray-200 relative">
+                    {venue.media && venue.media.length > 0 ? (
+                      <Image src={venue.media[0].url || "/placeholder.svg"} alt={venue.media[0].alt || venue.name} fill className="object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-xl font-bold">{venue.name}</h3>
+                    <p className="text-gray-600 mt-2 line-clamp-3">{venue.description}</p>
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-xl font-bold">{venue.name}</h3>
-                  <p className="text-gray-600 mt-2 line-clamp-3">{venue.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gray-50 p-6 rounded-lg text-center">
-            <p className="text-gray-500">You don&apos;t have any venues yet.</p>
-            {user.venueManager && (
-              <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues/create")}>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 p-6 rounded-lg text-center">
+              <p className="text-gray-500">You don&apos;t have any venues yet.</p>
+              <button className="mt-4 gray-button" onClick={() => router.push("/venues/create")}>
                 Create a Venue
               </button>
-            )}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Bookings Section */}
       <div className="mt-8 mb-8">
@@ -216,13 +241,14 @@ const ProfilePage = () => {
         {user.bookings && user.bookings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {user.bookings.map((booking) => (
-              <div key={booking.id} className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div key={booking.id} className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigateToBookingVenue(booking)}>
                 <div className="h-40 bg-gray-200 relative">
                   {booking.venue.media && booking.venue.media.length > 0 ? (
                     <Image src={booking.venue.media[0].url || "/placeholder.svg"} alt={booking.venue.media[0].alt || booking.venue.name} fill className="object-cover" />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
                   )}
+                  <div className="absolute bottom-0 right-0 bg-blue-500 text-white px-3 py-1 text-xs font-semibold">Click to view venue</div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{booking.venue.name}</h3>
@@ -244,7 +270,7 @@ const ProfilePage = () => {
         ) : (
           <div className="bg-gray-50 p-6 rounded-lg text-center">
             <p className="text-gray-500">You don&apos;t have any bookings yet.</p>
-            <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/")}>
+            <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues")}>
               Browse Venues
             </button>
           </div>
