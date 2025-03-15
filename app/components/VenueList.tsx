@@ -101,7 +101,7 @@ export default function VenueList() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-              <div className="relative w-full h-48 mb-4">
+              <div className="relative w-full h-48 mb-4 z-0">
                 <Image
                   src={venue.media[0]?.url || "/placeholder.svg"}
                   alt={venue.media[0]?.alt || venue.name}
@@ -143,7 +143,7 @@ export default function VenueList() {
       </div>
       {hasMore && (
         <div className="flex justify-center pt-4 pb-8">
-          <Button onClick={handleLoadMore} variant="outline" className="min-w-[200px]">
+          <Button onClick={handleLoadMore} variant="outline" className="min-w-[200px] gray-button">
             Show More Venues
           </Button>
         </div>
