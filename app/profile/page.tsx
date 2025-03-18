@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { API_CONFIG } from "@/app/api-config";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
 
 interface Venue {
   id: string;
@@ -121,6 +123,11 @@ const ProfilePage = () => {
     }
   };
 
+  // Function to navigate to edit profile page
+  const navigateToEditProfile = () => {
+    router.push("/profile/edit-images");
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-8 flex justify-center items-center min-h-[50vh]">
@@ -174,6 +181,14 @@ const ProfilePage = () => {
           ) : (
             <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600"></div>
           )}
+
+          {/* Edit Profile Button - positioned in the top right of the banner */}
+          <div className="absolute top-4 right-4">
+            <Button onClick={navigateToEditProfile} className="flex items-center gap-2 bg-white text-gray-800 hover:bg-gray-100" size="sm">
+              <Edit className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          </div>
         </div>
 
         {/* Profile info */}
@@ -194,8 +209,8 @@ const ProfilePage = () => {
             <h1 className="text-3xl font-bold">{user.name}</h1>
             <p className="text-gray-600">{user.email}</p>
             <div className="mt-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                {user.venueManager ? "Venue Manager" : "Guest"}
+              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-blue-100 text-gray-800"}`}>
+                {user.venueManager ? "Venue Manager" : "Customer"}
               </span>
             </div>
           </div>
@@ -227,7 +242,7 @@ const ProfilePage = () => {
           ) : (
             <div className="bg-gray-50 p-6 rounded-lg text-center">
               <p className="text-gray-500">You don&apos;t have any venues yet.</p>
-              <button className="mt-4 gray-button" onClick={() => router.push("/venues/create")}>
+              <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues/create")}>
                 Create a Venue
               </button>
             </div>
@@ -248,7 +263,7 @@ const ProfilePage = () => {
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
                   )}
-                  <div className="absolute bottom-0 right-0 bg-blue-500 text-white px-3 py-1 text-xs font-semibold">Click to view venue</div>
+                  <div className="absolute bottom-0 right-0 gray-button">Click to view venue</div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{booking.venue.name}</h3>
@@ -270,7 +285,7 @@ const ProfilePage = () => {
         ) : (
           <div className="bg-gray-50 p-6 rounded-lg text-center">
             <p className="text-gray-500">You don&apos;t have any bookings yet.</p>
-            <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues")}>
+            <button className="mt-4 gray-button" onClick={() => router.push("/")}>
               Browse Venues
             </button>
           </div>

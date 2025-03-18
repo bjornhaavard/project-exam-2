@@ -133,10 +133,12 @@ export default async function VenuePage({ params }: PageProps) {
 
     return (
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-3xl">{venue.name}</CardTitle>
-            <CardDescription className="text-lg">
+        <Card className="max-w-4xl mx-auto overflow-hidden">
+          <CardHeader className="overflow-hidden">
+            <div className="w-full overflow-hidden">
+              <CardTitle className="text-3xl break-words overflow-hidden">{venue.name}</CardTitle>
+            </div>
+            <CardDescription className="text-lg overflow-hidden text-ellipsis">
               {venue.location.address}, {venue.location.city}, {venue.location.country}
             </CardDescription>
           </CardHeader>
@@ -160,12 +162,12 @@ export default async function VenuePage({ params }: PageProps) {
             {/* Details */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h2 className="text-2xl font-semibold">About this venue</h2>
-                <p className="text-gray-600">{venue.description}</p>
+                <h2 className="text-2xl font-semibold break-words">About this venue</h2>
+                <p className="text-gray-600 break-words">{venue.description}</p>
 
                 <div className="space-y-2">
                   <h3 className="font-semibold">Amenities</h3>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-4">
                     {venue.meta.wifi && (
                       <div className="flex items-center gap-1">
                         <Wifi className="h-5 w-5" />
@@ -229,7 +231,7 @@ export default async function VenuePage({ params }: PageProps) {
 
             {/* Booking Calendar */}
             <div className="mt-8">
-              <h2 className="text-2xl font-semibold mb-4">Book this venue</h2>
+              <h2 className="text-2xl font-semibold mb-4 break-words">Book this venue</h2>
               <BookingCalendar venue={venue} existingBookings={bookings} />
             </div>
           </CardContent>

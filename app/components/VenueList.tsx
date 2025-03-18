@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface Venue {
   id: string;
@@ -49,30 +50,50 @@ interface ApiResponse {
 const INITIAL_DISPLAY_COUNT = 20;
 const LOAD_MORE_COUNT = 10;
 
-export default function VenueList() {
+interface VenueListProps {
+  searchQuery?: string;
+}
+
+export default function VenueList({ searchQuery = "" }: VenueListProps) {
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY_COUNT);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSearchResults, setIsSearchResults] = useState(false);
 
   useEffect(() => {
     async function fetchVenues() {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        const res = await fetch("https://v2.api.noroff.dev/holidaze/venues");
+        // Determine which API endpoint to use based on whether there's a search query
+        const apiUrl = searchQuery ? `https://v2.api.noroff.dev/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}` : "https://v2.api.noroff.dev/holidaze/venues";
+
+        const res = await fetch(apiUrl);
+
         if (!res.ok) {
-          throw new Error("Failed to fetch venues");
+          throw new Error(`Failed to fetch venues: ${res.status} ${res.statusText}`);
         }
+
         const data: ApiResponse = await res.json();
         setVenues(data.data);
+        setIsSearchResults(!!searchQuery);
+
+        // Reset display count when search changes
+        setDisplayCount(INITIAL_DISPLAY_COUNT);
       } catch (error) {
         console.error("Error fetching venues:", error);
+        setError(error instanceof Error ? error.message : "Failed to load venues");
+        setVenues([]);
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchVenues();
-  }, []);
+  }, [searchQuery]);
 
   const handleLoadMore = () => {
     setDisplayCount((prevCount) => prevCount + LOAD_MORE_COUNT);
@@ -83,7 +104,38 @@ export default function VenueList() {
   };
 
   if (isLoading) {
-    return <div className="text-center text-gray-500">Loading venues...</div>;
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500 mr-2" />
+        <span className="text-gray-500">Loading venues...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (venues.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg">
+        {searchQuery ? (
+          <>
+            <h2 className="text-xl font-semibold mb-2">No results found</h2>
+            <p className="text-gray-600 mb-4">No venues match your search for &quot;{searchQuery}&quot;</p>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              View all venues
+            </Button>
+          </>
+        ) : (
+          <p className="text-gray-600">No venues available at the moment.</p>
+        )}
+      </div>
+    );
   }
 
   const displayedVenues = venues.slice(0, displayCount);
@@ -91,6 +143,15 @@ export default function VenueList() {
 
   return (
     <div className="space-y-8">
+      {isSearchResults && (
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Search results for &quot;{searchQuery}&quot;</h2>
+          <p className="text-gray-600">
+            Found {venues.length} {venues.length === 1 ? "venue" : "venues"}
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedVenues.map((venue) => (
           <Card key={venue.id} className="flex flex-col">

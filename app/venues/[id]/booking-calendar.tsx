@@ -260,7 +260,7 @@ export default function BookingCalendar({ venue, existingBookings }: BookingCale
               <span>Booked dates</span>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+              <div className="w-4 h-4 rounded-full bg-gray-800"></div>
               <span>Selected dates</span>
             </div>
           </div>
