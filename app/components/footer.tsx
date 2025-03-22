@@ -20,17 +20,16 @@ const Footer = () => {
               </li>
               <li>
                 <Link href="" className="text-gray-300 hover:text-white">
-                  Contact Us
+                  To the top
                 </Link>
               </li>
             </ul>
           </div>
           <div className="footer-section">
-            <h3 className="text-lg font-bold mb-2">Contact</h3>
+            <h3 className="text-lg font-bold mb-2">Profile</h3>
             <p>
-              Have questions?{" "}
-              <Link href="/contact" className="text-blue-400 hover:text-blue-500">
-                Get in touch
+              <Link href="/profile" className="text-blue-400 hover:text-blue-500">
+                View your Profile
               </Link>
             </p>
           </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { API_CONFIG } from "@/app/api-config";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import { differenceInDays, parseISO } from "date-fns";
 
 interface Venue {
   id: string;
@@ -22,6 +23,7 @@ interface Booking {
     id: string;
     name: string;
     description: string;
+    price: number; // Make sure price is included
     media?: { url: string; alt: string }[];
   };
 }
@@ -123,6 +125,14 @@ const ProfilePage = () => {
     }
   };
 
+  // Add this function to calculate the total price
+  const calculateBookingPrice = (booking: Booking): number => {
+    const startDate = parseISO(booking.dateFrom);
+    const endDate = parseISO(booking.dateTo);
+    const nights = differenceInDays(endDate, startDate);
+    return nights * booking.venue.price;
+  };
+
   // Function to navigate to edit profile page
   const navigateToEditProfile = () => {
     router.push("/profile/edit-images");
@@ -209,8 +219,8 @@ const ProfilePage = () => {
             <h1 className="text-3xl font-bold">{user.name}</h1>
             <p className="text-gray-600">{user.email}</p>
             <div className="mt-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-blue-100 text-gray-800"}`}>
-                {user.venueManager ? "Venue Manager" : "Customer"}
+              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                {user.venueManager ? "Venue Manager" : "Guest"}
               </span>
             </div>
           </div>
@@ -263,7 +273,7 @@ const ProfilePage = () => {
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
                   )}
-                  <div className="absolute bottom-0 right-0 gray-button">Click to view venue</div>
+                  <div className="absolute bottom-0 right-0 bg-blue-500 text-white px-3 py-1 text-xs font-semibold">Click to view venue</div>
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{booking.venue.name}</h3>
@@ -277,6 +287,12 @@ const ProfilePage = () => {
                     <p className="text-sm text-gray-600">
                       <span className="font-semibold">Guests:</span> {booking.guests}
                     </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-semibold">Price:</span> ${calculateBookingPrice(booking)}
+                      <span className="text-xs ml-1">
+                        (${booking.venue.price} × {differenceInDays(parseISO(booking.dateTo), parseISO(booking.dateFrom))} nights)
+                      </span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -285,7 +301,7 @@ const ProfilePage = () => {
         ) : (
           <div className="bg-gray-50 p-6 rounded-lg text-center">
             <p className="text-gray-500">You don&apos;t have any bookings yet.</p>
-            <button className="mt-4 gray-button" onClick={() => router.push("/")}>
+            <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues")}>
               Browse Venues
             </button>
           </div>
