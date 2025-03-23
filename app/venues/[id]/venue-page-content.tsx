@@ -1,10 +1,10 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wifi, Car, Coffee, Dog } from "lucide-react";
 import BookingCalendar from "./booking-calendar";
 import VenueActions from "./venue-actions";
 import { API_CONFIG } from "@/app/api-config";
+import VenueImageGallery from "./venue-image-gallery";
 
 interface Venue {
   id: string;
@@ -143,21 +143,8 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
             <VenueActions venueId={venue.id} />
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Main Image */}
-            <div className="relative w-full h-[400px]">
-              <Image src={venue.media[0]?.url || "/placeholder.svg"} alt={venue.media[0]?.alt || venue.name} fill className="rounded-lg object-cover" unoptimized />
-            </div>
-
-            {/* Additional Images */}
-            {venue.media.length > 1 && (
-              <div className="grid grid-cols-4 gap-4 mt-4">
-                {venue.media.slice(1).map((image, index) => (
-                  <div key={index} className="relative h-24">
-                    <Image src={image.url || "/placeholder.svg"} alt={image.alt || `${venue.name} image ${index + 2}`} fill className="rounded-md object-cover" unoptimized />
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Image Gallery Component */}
+            <VenueImageGallery venue={venue} />
 
             {/* Details */}
             <div className="grid md:grid-cols-2 gap-6">

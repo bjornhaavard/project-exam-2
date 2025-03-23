@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import ImageGalleryModal from "./ImageGalleryModal";
 
 interface Venue {
   id: string;
@@ -62,6 +62,11 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSearchResults, setIsSearchResults] = useState(false);
 
+  // State for the image gallery modal
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
+  const [initialImageIndex, setInitialImageIndex] = useState(0);
+
   useEffect(() => {
     async function fetchVenues() {
       setIsLoading(true);
@@ -69,7 +74,7 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
 
       try {
         // Determine which API endpoint to use based on whether there's a search query
-        const apiUrl = searchQuery ? `https://v2.api.noroff.dev/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}` : "https://v2.api.noroff.dev/holidaze/venues";
+        const apiUrl = searchQuery ? `https://v2.api.noroff.dev/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}` : "https://v2.api.noroff.dev/holidaze/venues?sort=created&sortOrder=desc";
 
         const res = await fetch(apiUrl);
 
@@ -103,11 +108,52 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
     router.push(`/venues/${venueId}`);
   };
 
+  // Function to open the image gallery
+  const openGallery = (venue: Venue, imageIndex = 0) => {
+    setSelectedVenue(venue);
+    setInitialImageIndex(imageIndex);
+    setGalleryOpen(true);
+  };
+
+  // Loading skeleton directly in the component
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500 mr-2" />
-        <span className="text-gray-500">Loading venues...</span>
+      <div>
+        {/* Loading message */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center space-x-2">
+            <div className="h-5 w-5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+            <div className="h-5 w-5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+            <div className="h-5 w-5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+            <span className="text-gray-500 ml-2">Loading venues...</span>
+          </div>
+        </div>
+
+        {/* Venue cards skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array(6)
+            .fill(0)
+            .map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Image skeleton */}
+                <div className="h-48 w-full bg-gray-200 animate-pulse"></div>
+
+                {/* Content skeleton */}
+                <div className="p-4">
+                  <div className="h-6 w-3/4 mb-2 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-4 w-1/2 mb-4 bg-gray-200 animate-pulse rounded"></div>
+                  <div className="h-24 w-full mb-4 bg-gray-200 animate-pulse rounded"></div>
+
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="h-5 w-20 bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-5 w-24 bg-gray-200 animate-pulse rounded"></div>
+                  </div>
+
+                  <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
     );
   }
@@ -154,31 +200,35 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayedVenues.map((venue) => (
-          <Card key={venue.id} className="flex flex-col">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem]">{venue.name}</CardTitle>
-              <CardDescription className="line-clamp-1">
+          <Card key={venue.id} className="flex flex-col overflow-hidden">
+            <CardHeader className="space-y-2 p-4">
+              <div className="w-full overflow-hidden">
+                <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem] break-words overflow-hidden">{venue.name}</CardTitle>
+              </div>
+              <CardDescription className="line-clamp-1 overflow-hidden text-ellipsis">
                 {venue.location.city}, {venue.location.country}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="relative w-full h-48 mb-4 z-0">
+            <CardContent className="flex-grow p-4 pt-0">
+              <div className="relative w-full h-48 mb-4 z-0 cursor-pointer overflow-hidden group" onClick={() => openGallery(venue, 0)}>
                 <Image
                   src={venue.media[0]?.url || "/placeholder.svg"}
                   alt={venue.media[0]?.alt || venue.name}
                   width={500}
                   height={300}
-                  className="rounded-md w-full h-48 object-cover"
+                  className="rounded-md w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                   unoptimized
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/placeholder.svg";
                   }}
                 />
+                {venue.media.length > 1 && <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">+{venue.media.length - 1} more</div>}
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </div>
-              <p className="text-sm line-clamp-3">{venue.description}</p>
+              <p className="text-sm line-clamp-3 overflow-hidden">{venue.description}</p>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+            <CardFooter className="flex flex-col space-y-4 p-4">
               <div className="flex justify-between items-center w-full">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg font-semibold">${venue.price}</span>
@@ -202,6 +252,7 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
           </Card>
         ))}
       </div>
+
       {hasMore && (
         <div className="flex justify-center pt-4 pb-8">
           <Button onClick={handleLoadMore} variant="outline" className="min-w-[200px] gray-button">
@@ -209,6 +260,9 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
           </Button>
         </div>
       )}
+
+      {/* Image Gallery Modal */}
+      {selectedVenue && <ImageGalleryModal images={selectedVenue.media} initialIndex={initialImageIndex} isOpen={galleryOpen} onClose={() => setGalleryOpen(false)} />}
     </div>
   );
 }
