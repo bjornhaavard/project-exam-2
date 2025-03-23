@@ -1,7 +1,44 @@
-import React from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const Footer = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check authentication status when component mounts and when auth changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
+
+    // Check on mount
+    checkAuthStatus();
+
+    // Listen for auth changes (like login/logout events)
+    window.addEventListener("authChange", checkAuthStatus);
+    window.addEventListener("storage", checkAuthStatus);
+
+    return () => {
+      window.removeEventListener("authChange", checkAuthStatus);
+      window.removeEventListener("storage", checkAuthStatus);
+    };
+  }, []);
+
+  // Function to scroll to top
+  const scrollToTop = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Function to trigger the login drawer
+  const triggerLoginDrawer = () => {
+    // Create and dispatch a custom event that the LoginDrawer component can listen for
+    const loginEvent = new CustomEvent("triggerLoginDrawer");
+    window.dispatchEvent(loginEvent);
+  };
+
   return (
     <footer className="bg-gray-800 text-white w-full">
       <div className="container mx-auto p-8">
@@ -19,19 +56,27 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="" className="text-gray-300 hover:text-white">
+                <a href="#" onClick={scrollToTop} className="text-gray-300 hover:text-white">
                   To the top
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
           <div className="footer-section">
             <h3 className="text-lg font-bold mb-2">Profile</h3>
-            <p>
-              <Link href="/profile" className="text-blue-400 hover:text-blue-500">
-                View your Profile
-              </Link>
-            </p>
+            {isLoggedIn ? (
+              <p>
+                <Link href="/profile" className="text-blue-400 hover:text-blue-500">
+                  View your Profile
+                </Link>
+              </p>
+            ) : (
+              <p>
+                <button onClick={triggerLoginDrawer} className="text-blue-400 hover:text-blue-500 bg-transparent border-none p-0 cursor-pointer">
+                  Login to view your Profile
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>

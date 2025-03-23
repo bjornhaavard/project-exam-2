@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -19,6 +19,21 @@ const LoginDrawer = () => {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+
+  // Listen for the custom event from the footer
+  useEffect(() => {
+    const handleLoginTrigger = () => {
+      setIsOpen(true);
+      setError("");
+      setDebugInfo("");
+    };
+
+    window.addEventListener("triggerLoginDrawer", handleLoginTrigger);
+
+    return () => {
+      window.removeEventListener("triggerLoginDrawer", handleLoginTrigger);
+    };
+  }, []);
 
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
@@ -204,6 +219,11 @@ const LoginDrawer = () => {
               </div>
             </div>
             <div className="flex items-center justify-between">
+              <Link href="/auth/register">
+                <button className="bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={() => setIsOpen(false)}>
+                  Register
+                </button>
+              </Link>
               <button
                 className={`bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 type="submit"
@@ -211,11 +231,6 @@ const LoginDrawer = () => {
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </button>
-              <Link href="/auth/register">
-                <button className="bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={() => setIsOpen(false)}>
-                  Register
-                </button>
-              </Link>
             </div>
           </form>
 
