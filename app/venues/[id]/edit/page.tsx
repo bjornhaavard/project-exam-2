@@ -1,16 +1,16 @@
 import { use } from "react";
-import VenuePageContent from "./venue-page-content";
+import EditVenueContent from "./edit-venue-content";
 
-interface VenuePageProps {
+interface EditVenuePageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default function VenuePage({ params }: VenuePageProps) {
+export default function EditVenuePage({ params }: EditVenuePageProps) {
   // Unwrap the params Promise using React.use() in a non-async component
   const resolvedParams = use(params);
 
   // Pass the unwrapped id to the content component
-  return <VenuePageContent id={resolvedParams.id} />;
+  return <EditVenueContent id={resolvedParams.id} />;
 }

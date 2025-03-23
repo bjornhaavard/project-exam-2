@@ -6,9 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { API_CONFIG } from "@/app/api-config";
+import { useAuthNotification } from "@/app/context/auth-notification-context";
 
 const LoginDrawer = () => {
   const router = useRouter();
+  const { showAuthNotification } = useAuthNotification();
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -62,7 +64,7 @@ const LoginDrawer = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // No API key needed for login
+          "X-Noroff-API-Key": API_CONFIG.API_KEY,
         },
         body: payload,
       });
@@ -77,6 +79,27 @@ const LoginDrawer = () => {
       }
 
       if (data.data?.accessToken) {
+        // After successful login, fetch the user profile to get accurate venueManager status
+        setDebugInfo((prev) => prev + `\nFetching user profile to get accurate venueManager status...`);
+
+        const profileResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/profiles/${data.data.name}`, {
+          headers: {
+            Authorization: `Bearer ${data.data.accessToken}`,
+            "X-Noroff-API-Key": API_CONFIG.API_KEY,
+          },
+        });
+
+        if (!profileResponse.ok) {
+          setDebugInfo((prev) => prev + `\nWarning: Could not fetch profile data. Status: ${profileResponse.status}`);
+        } else {
+          const profileData = await profileResponse.json();
+          setDebugInfo((prev) => prev + `\nProfile data: ${JSON.stringify(profileData.data, null, 2)}`);
+
+          // Use venueManager status from profile data
+          data.data.venueManager = profileData.data.venueManager;
+          setDebugInfo((prev) => prev + `\nUpdated venueManager status: ${data.data.venueManager}`);
+        }
+
         // Store auth data in localStorage
         localStorage.setItem("token", data.data.accessToken);
         localStorage.setItem(
@@ -86,11 +109,17 @@ const LoginDrawer = () => {
             email: data.data.email,
             avatar: data.data.avatar,
             banner: data.data.banner,
-            venueManager: data.data.venueManager,
+            venueManager: data.data.venueManager, // This should now be accurate
           })
         );
 
         setDebugInfo((prev) => prev + "\nLogin successful, redirecting...");
+
+        // Add debug info about venue manager status
+        setDebugInfo((prev) => prev + `\nVenue Manager status: ${data.data.venueManager}`);
+
+        // Show login notification
+        showAuthNotification("login", data.data.name);
 
         // Dispatch custom event to notify other components (like Navbar)
         window.dispatchEvent(new Event("authChange"));

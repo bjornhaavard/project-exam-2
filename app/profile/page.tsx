@@ -6,12 +6,19 @@ import { API_CONFIG } from "@/app/api-config";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { differenceInDays, parseISO } from "date-fns";
+import VenueManagement from "./venue-management";
 
 interface Venue {
   id: string;
   name: string;
   description: string;
   media?: { url: string; alt: string }[];
+  price: number;
+  maxGuests: number;
+  rating?: number;
+  _count?: {
+    bookings: number;
+  };
 }
 
 interface Booking {
@@ -112,11 +119,6 @@ const ProfilePage = () => {
 
     fetchUserProfile();
   }, [router]);
-
-  // Function to navigate to venue details
-  const navigateToVenue = (venueId: string) => {
-    router.push(`/venues/${venueId}`);
-  };
 
   // Function to navigate to venue details from a booking - fixed type definition
   const navigateToBookingVenue = (booking: Booking) => {
@@ -219,8 +221,8 @@ const ProfilePage = () => {
             <h1 className="text-3xl font-bold">{user.name}</h1>
             <p className="text-gray-600">{user.email}</p>
             <div className="mt-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                {user.venueManager ? "Venue Manager" : "Guest"}
+              <span className={`inline-block px-3 py-1 rounded-full text-sm ${user.venueManager ? "bg-green-100 text-green-800" : "bg-blue-100 text-gray-800"}`}>
+                {user.venueManager ? "Venue Manager" : "Customer"}
               </span>
             </div>
           </div>
@@ -230,33 +232,16 @@ const ProfilePage = () => {
       {/* Venues Section - Only show if user is a venue manager */}
       {user.venueManager && (
         <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">My Venues</h2>
-          {user.venues && user.venues.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {user.venues.map((venue) => (
-                <div key={venue.id} className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigateToVenue(venue.id)}>
-                  <div className="h-48 bg-gray-200 relative">
-                    {venue.media && venue.media.length > 0 ? (
-                      <Image src={venue.media[0].url || "/placeholder.svg"} alt={venue.media[0].alt || venue.name} fill className="object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-500">No image available</div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold">{venue.name}</h3>
-                    <p className="text-gray-600 mt-2 line-clamp-3">{venue.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-gray-50 p-6 rounded-lg text-center">
-              <p className="text-gray-500">You don&apos;t have any venues yet.</p>
-              <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues/create")}>
-                Create a Venue
-              </button>
-            </div>
-          )}
+          <VenueManagement
+            venues={user.venues || []}
+            onVenueDeleted={(deletedVenueId) => {
+              // Update the user state to remove the deleted venue
+              setUser({
+                ...user,
+                venues: user.venues?.filter((venue) => venue.id !== deletedVenueId),
+              });
+            }}
+          />
         </div>
       )}
 
@@ -301,7 +286,7 @@ const ProfilePage = () => {
         ) : (
           <div className="bg-gray-50 p-6 rounded-lg text-center">
             <p className="text-gray-500">You don&apos;t have any bookings yet.</p>
-            <button className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => router.push("/venues")}>
+            <button className="mt-4 gray-button" onClick={() => router.push("/")}>
               Browse Venues
             </button>
           </div>

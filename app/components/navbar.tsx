@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import LoginDrawer from "../auth/login/LoginDrawer";
+import { useAuthNotification } from "@/app/context/auth-notification-context";
 
 interface UserData {
   name: string;
@@ -25,6 +26,7 @@ const Navbar = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
+  const { showAuthNotification } = useAuthNotification();
 
   // Check if user is logged in on component mount and when localStorage changes
   useEffect(() => {
@@ -84,6 +86,9 @@ const Navbar = () => {
     // Update state
     setUser(null);
     setIsDropdownOpen(false);
+
+    // Show logout notification
+    showAuthNotification("logout");
 
     // Dispatch custom event to notify other components
     window.dispatchEvent(new Event("authChange"));
