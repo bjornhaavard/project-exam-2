@@ -63,7 +63,8 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
             }
             return
           }
-        } catch (_) {
+        } catch {
+          // No parameter needed here
           if (isMounted) {
             setIsOwner(false)
             setIsLoading(false)
