@@ -1,119 +1,143 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import ImageGalleryModal from "./ImageGalleryModal";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import ImageGalleryModal from "./ImageGalleryModal"
+import { API_CONFIG } from "@/app/api-config"
 
 interface Venue {
-  id: string;
-  name: string;
-  description: string;
-  media: { url: string; alt: string }[];
-  price: number;
-  maxGuests: number;
-  rating: number;
-  created: string;
-  updated: string;
+  id: string
+  name: string
+  description: string
+  media: { url: string; alt: string }[]
+  price: number
+  maxGuests: number
+  rating: number
+  created: string
+  updated: string
   meta: {
-    wifi: boolean;
-    parking: boolean;
-    breakfast: boolean;
-    pets: boolean;
-  };
+    wifi: boolean
+    parking: boolean
+    breakfast: boolean
+    pets: boolean
+  }
   location: {
-    address: string;
-    city: string;
-    zip: string;
-    country: string;
-    continent: string | null;
-    lat: number;
-    lng: number;
-  };
+    address: string
+    city: string
+    zip: string
+    country: string
+    continent: string | null
+    lat: number
+    lng: number
+  }
   _count?: {
-    bookings: number;
-  };
+    bookings: number
+  }
 }
 
 interface ApiResponse {
-  data: Venue[];
+  data: Venue[]
   meta: {
-    isSuccess: boolean;
-    count: number;
-    limit: number;
-    offset: number;
-  };
+    isSuccess: boolean
+    count: number
+    limit: number
+    offset: number
+  }
 }
 
-const INITIAL_DISPLAY_COUNT = 20;
-const LOAD_MORE_COUNT = 10;
+const INITIAL_DISPLAY_COUNT = 20
+const LOAD_MORE_COUNT = 10
 
 interface VenueListProps {
-  searchQuery?: string;
+  searchQuery?: string
 }
 
 export default function VenueList({ searchQuery = "" }: VenueListProps) {
-  const router = useRouter();
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY_COUNT);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSearchResults, setIsSearchResults] = useState(false);
+  const router = useRouter()
+  const [venues, setVenues] = useState<Venue[]>([])
+  const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY_COUNT)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isSearchResults, setIsSearchResults] = useState(false)
 
   // State for the image gallery modal
-  const [galleryOpen, setGalleryOpen] = useState(false);
-  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
-  const [initialImageIndex, setInitialImageIndex] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
+  const [initialImageIndex, setInitialImageIndex] = useState(0)
 
   useEffect(() => {
     async function fetchVenues() {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       try {
         // Determine which API endpoint to use based on whether there's a search query
-        const apiUrl = searchQuery ? `https://v2.api.noroff.dev/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}` : "https://v2.api.noroff.dev/holidaze/venues?sort=created&sortOrder=desc";
+        const apiUrl = searchQuery
+          ? `${API_CONFIG.BASE_URL}/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}`
+          : `${API_CONFIG.BASE_URL}/holidaze/venues?sort=created&sortOrder=desc`
 
-        const res = await fetch(apiUrl);
+        console.log(`Fetching venues from: ${apiUrl}`)
+
+        const res = await fetch(apiUrl, {
+          headers: {
+            "X-Noroff-API-Key": API_CONFIG.API_KEY,
+          },
+          // Use cache: 'no-store' to prevent caching issues
+          cache: "no-store",
+        })
 
         if (!res.ok) {
-          throw new Error(`Failed to fetch venues: ${res.status} ${res.statusText}`);
+          throw new Error(`Failed to fetch venues: ${res.status} ${res.statusText}`)
         }
 
-        const data: ApiResponse = await res.json();
-        setVenues(data.data);
-        setIsSearchResults(!!searchQuery);
+        const data: ApiResponse = await res.json()
+
+        // Log the media URLs from the first few venues for debugging
+        if (data.data.length > 0) {
+          console.log("Sample venue media from list:", JSON.stringify(data.data[0].media))
+        }
+
+        setVenues(data.data)
+        setIsSearchResults(!!searchQuery)
 
         // Reset display count when search changes
-        setDisplayCount(INITIAL_DISPLAY_COUNT);
+        setDisplayCount(INITIAL_DISPLAY_COUNT)
       } catch (error) {
-        console.error("Error fetching venues:", error);
-        setError(error instanceof Error ? error.message : "Failed to load venues");
-        setVenues([]);
+        console.error("Error fetching venues:", error)
+        setError(error instanceof Error ? error.message : "Failed to load venues")
+        setVenues([])
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    fetchVenues();
-  }, [searchQuery]);
+    fetchVenues()
+  }, [searchQuery])
 
   const handleLoadMore = () => {
-    setDisplayCount((prevCount) => prevCount + LOAD_MORE_COUNT);
-  };
+    setDisplayCount((prevCount) => prevCount + LOAD_MORE_COUNT)
+  }
 
+  // IMPORTANT: This is the second GET request that might be causing issues
+  // It navigates to the venue detail page, which triggers another API call
   const handleViewDetails = (venueId: string) => {
-    router.push(`/venues/${venueId}`);
-  };
+    // Add a flag to localStorage to indicate we're coming from the list
+    // This can help prevent unnecessary refetching on the detail page
+    localStorage.setItem("venueListNavigation", "true")
+
+    // Navigate to the venue detail page
+    router.push(`/venues/${venueId}`)
+  }
 
   // Function to open the image gallery
   const openGallery = (venue: Venue, imageIndex = 0) => {
-    setSelectedVenue(venue);
-    setInitialImageIndex(imageIndex);
-    setGalleryOpen(true);
-  };
+    setSelectedVenue(venue)
+    setInitialImageIndex(imageIndex)
+    setGalleryOpen(true)
+  }
 
   // Loading skeleton directly in the component
   if (isLoading) {
@@ -155,7 +179,7 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
             ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -163,7 +187,7 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
         <p>{error}</p>
       </div>
-    );
+    )
   }
 
   if (venues.length === 0) {
@@ -181,11 +205,11 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
           <p className="text-gray-600">No venues available at the moment.</p>
         )}
       </div>
-    );
+    )
   }
 
-  const displayedVenues = venues.slice(0, displayCount);
-  const hasMore = displayCount < venues.length;
+  const displayedVenues = venues.slice(0, displayCount)
+  const hasMore = displayCount < venues.length
 
   return (
     <div className="space-y-8">
@@ -203,27 +227,36 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
           <Card key={venue.id} className="flex flex-col overflow-hidden">
             <CardHeader className="space-y-2 p-4">
               <div className="w-full overflow-hidden">
-                <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem] break-words overflow-hidden">{venue.name}</CardTitle>
+                <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem] break-words overflow-hidden">
+                  {venue.name}
+                </CardTitle>
               </div>
               <CardDescription className="line-clamp-1 overflow-hidden text-ellipsis">
                 {venue.location.city}, {venue.location.country}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow p-4 pt-0">
-              <div className="relative w-full h-48 mb-4 z-0 cursor-pointer overflow-hidden group" onClick={() => openGallery(venue, 0)}>
+              <div
+                className="relative w-full h-48 mb-4 z-0 cursor-pointer overflow-hidden group"
+                onClick={() => openGallery(venue, 0)}
+              >
                 <Image
                   src={venue.media[0]?.url || "/placeholder.svg"}
                   alt={venue.media[0]?.alt || venue.name}
                   width={500}
                   height={300}
                   className="rounded-md w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                  unoptimized
+                  unoptimized={true}
                   onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder.svg";
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg"
                   }}
                 />
-                {venue.media.length > 1 && <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">+{venue.media.length - 1} more</div>}
+                {venue.media.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                    +{venue.media.length - 1} more
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </div>
               <p className="text-sm line-clamp-3 overflow-hidden">{venue.description}</p>
@@ -236,7 +269,12 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
                 </div>
                 <div className="flex items-center space-x-1">
                   <span className="text-sm">{venue.rating.toFixed(1)}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-5 h-5 text-yellow-500"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
@@ -262,7 +300,15 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
       )}
 
       {/* Image Gallery Modal */}
-      {selectedVenue && <ImageGalleryModal images={selectedVenue.media} initialIndex={initialImageIndex} isOpen={galleryOpen} onClose={() => setGalleryOpen(false)} />}
+      {selectedVenue && (
+        <ImageGalleryModal
+          images={selectedVenue.media}
+          initialIndex={initialImageIndex}
+          isOpen={galleryOpen}
+          onClose={() => setGalleryOpen(false)}
+        />
+      )}
     </div>
-  );
+  )
 }
+

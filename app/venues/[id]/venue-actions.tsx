@@ -63,8 +63,12 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
             }
             return
           }
+<<<<<<< HEAD
         } catch {
           // No parameter needed here
+=======
+        } catch (_) {
+>>>>>>> d76b4d3f5962a3b5a12d1683a6ebaf069a391295
           if (isMounted) {
             setIsOwner(false)
             setIsLoading(false)
