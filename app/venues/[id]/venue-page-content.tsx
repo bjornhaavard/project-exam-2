@@ -5,8 +5,6 @@ import BookingCalendar from "./booking-calendar";
 import VenueActions from "./venue-actions";
 import { API_CONFIG } from "@/app/api-config";
 import VenueImageGallery from "./venue-image-gallery";
-// Import the verification component at the top
-import VerifyVenueMedia from "@/app/components/verify-venue-media";
 
 interface Venue {
   id: string;
@@ -63,11 +61,13 @@ interface VenuePageContentProps {
   id: string;
 }
 
-async function getVenue(id: string): Promise<Venue> {
+// Single function to get venue with bookings included
+async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[] }> {
   try {
-    console.log(`Fetching venue with ID: ${id}`);
+    console.log(`Fetching venue with ID: ${id} (including bookings)`);
 
-    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}`;
+    // Include _bookings=true parameter to get bookings in a single request
+    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}?_bookings=true`;
     console.log(`API URL: ${url}`);
 
     const res = await fetch(url, {
@@ -83,49 +83,30 @@ async function getVenue(id: string): Promise<Venue> {
     }
 
     const data: ApiResponse = await res.json();
-    // In the getVenue function, add this log before returning the data:
-    console.log("Venue data from API:", data.data);
-    if (data.data.media && data.data.media.length > 0) {
-      console.log("Venue has media:", JSON.stringify(data.data.media));
-    } else {
-      console.log("Venue has no media, might use default image");
+
+    // Extract bookings from the response or provide an empty array
+    const bookings = data.data.bookings || [];
+
+    // Log the media URLs to help debug the image issue
+    console.log("Venue media from API:", JSON.stringify(data.data.media));
+
+    // Store the venue data in sessionStorage to preserve it across page refreshes
+    // This helps prevent the API from overriding our images
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(`venue_${id}`, JSON.stringify(data.data));
+      } catch (e) {
+        console.error("Failed to store venue in sessionStorage:", e);
+      }
     }
-    return data.data;
+
+    return {
+      venue: data.data,
+      bookings: bookings,
+    };
   } catch (error) {
     console.error("Error fetching venue:", error);
     notFound();
-  }
-}
-
-async function getVenueBookings(id: string): Promise<Booking[]> {
-  try {
-    // Get venue with bookings included
-    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}?_bookings=true`;
-    console.log(`Fetching venue with bookings: ${url}`);
-
-    const res = await fetch(url, {
-      headers: {
-        "X-Noroff-API-Key": API_CONFIG.API_KEY,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      console.error(`Failed to fetch venue with bookings: ${res.status} ${res.statusText}`);
-      return []; // Return empty array if we can't fetch bookings
-    }
-
-    const data = await res.json();
-
-    // Check if bookings data exists
-    if (data.data && data.data.bookings && Array.isArray(data.data.bookings)) {
-      return data.data.bookings;
-    }
-
-    return []; // Return empty array if no bookings found
-  } catch (error) {
-    console.error("Error fetching venue bookings:", error);
-    return [];
   }
 }
 
@@ -133,9 +114,29 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
   console.log(`Rendering venue page for ID: ${id}`);
 
   try {
-    // Fetch venue data
-    const venue = await getVenue(id);
-    const bookings = await getVenueBookings(id);
+    // Check if we're coming from the venue list and have cached data
+    let venue: Venue | null = null;
+    let bookings: Booking[] = [];
+
+    // Try to get venue from sessionStorage first
+    if (typeof window !== "undefined") {
+      try {
+        const cachedVenue = sessionStorage.getItem(`venue_${id}`);
+        if (cachedVenue) {
+          venue = JSON.parse(cachedVenue);
+          console.log("Using cached venue data from sessionStorage");
+        }
+      } catch (e) {
+        console.error("Failed to retrieve venue from sessionStorage:", e);
+      }
+    }
+
+    // If no cached venue, fetch from API
+    if (!venue) {
+      const result = await getVenue(id);
+      venue = result.venue;
+      bookings = result.bookings;
+    }
 
     return (
       <div className="container mx-auto px-4 py-8">
