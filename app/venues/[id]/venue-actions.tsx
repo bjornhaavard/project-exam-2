@@ -1,79 +1,75 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Edit, Trash2 } from "lucide-react"
-import { toast } from "sonner"
-import { API_CONFIG } from "@/app/api-config"
-import ConfirmationDialog from "@/app/components/confirmation-dialog"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { API_CONFIG } from "@/app/api-config";
+import ConfirmationDialog from "@/app/components/confirmation-dialog";
 
 interface VenueActionsProps {
-  venueId: string
+  venueId: string;
 }
 
 interface UserVenue {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function VenueActions({ venueId }: VenueActionsProps) {
-  const router = useRouter()
-  const [isOwner, setIsOwner] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [venueName, setVenueName] = useState("")
+  const router = useRouter();
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [venueName, setVenueName] = useState("");
 
   // Ownership check - optimized to reduce API calls
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     async function checkOwnership() {
-      if (!isMounted) return
-      setIsLoading(true)
-      setIsOwner(null)
+      if (!isMounted) return;
+      setIsLoading(true);
+      setIsOwner(null);
 
       try {
         // Check if user is logged in
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         if (!token) {
           if (isMounted) {
-            setIsOwner(false)
-            setIsLoading(false)
+            setIsOwner(false);
+            setIsLoading(false);
           }
-          return
+          return;
         }
 
         // Check if user is a venue manager
-        const userData = localStorage.getItem("user")
+        const userData = localStorage.getItem("user");
         if (!userData) {
           if (isMounted) {
-            setIsOwner(false)
-            setIsLoading(false)
+            setIsOwner(false);
+            setIsLoading(false);
           }
-          return
+          return;
         }
 
         try {
-          const user = JSON.parse(userData)
+          const user = JSON.parse(userData);
           if (!user.venueManager) {
             if (isMounted) {
-              setIsOwner(false)
-              setIsLoading(false)
+              setIsOwner(false);
+              setIsLoading(false);
             }
-            return
+            return;
           }
-<<<<<<< HEAD
         } catch {
           // No parameter needed here
-=======
-        } catch (_) {
->>>>>>> d76b4d3f5962a3b5a12d1683a6ebaf069a391295
           if (isMounted) {
-            setIsOwner(false)
-            setIsLoading(false)
+            setIsOwner(false);
+            setIsLoading(false);
           }
-          return
+          return;
         }
 
         // SINGLE API CALL: Fetch the venue with owner information
@@ -84,26 +80,26 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
             "X-Noroff-API-Key": API_CONFIG.API_KEY,
           },
           cache: "no-store",
-        })
+        });
 
         if (venueResponse.ok) {
-          const venueData = await venueResponse.json()
+          const venueData = await venueResponse.json();
 
           // Set venue name for UI
           if (venueData.data?.name && isMounted) {
-            setVenueName(venueData.data.name)
+            setVenueName(venueData.data.name);
           }
 
           // Check ownership by comparing profile data
-          const profileData = localStorage.getItem("profile")
+          const profileData = localStorage.getItem("profile");
           if (profileData && venueData.data?.owner) {
-            const profile = JSON.parse(profileData)
-            const isOwner = profile.email === venueData.data.owner.email
+            const profile = JSON.parse(profileData);
+            const isOwner = profile.email === venueData.data.owner.email;
 
             if (isMounted) {
-              setIsOwner(isOwner)
-              setIsLoading(false)
-              return
+              setIsOwner(isOwner);
+              setIsLoading(false);
+              return;
             }
           }
         }
@@ -117,53 +113,53 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
               "X-Noroff-API-Key": API_CONFIG.API_KEY,
             },
             cache: "no-store",
-          })
+          });
 
           if (profileResponse.ok) {
-            const profileData = await profileResponse.json()
-            const userVenues: UserVenue[] = profileData.data?.venues || []
-            const isInVenuesList = userVenues.some((venue: UserVenue) => venue.id === venueId)
+            const profileData = await profileResponse.json();
+            const userVenues: UserVenue[] = profileData.data?.venues || [];
+            const isInVenuesList = userVenues.some((venue: UserVenue) => venue.id === venueId);
 
             if (isMounted) {
-              setIsOwner(isInVenuesList)
-              setIsLoading(false)
-              return
+              setIsOwner(isInVenuesList);
+              setIsLoading(false);
+              return;
             }
           }
         }
 
         // If we get here, we couldn't confirm ownership
         if (isMounted) {
-          setIsOwner(false)
-          setIsLoading(false)
+          setIsOwner(false);
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Error in venue ownership check:", error)
+        console.error("Error in venue ownership check:", error);
         if (isMounted) {
-          setIsOwner(false)
-          setIsLoading(false)
+          setIsOwner(false);
+          setIsLoading(false);
         }
       }
     }
 
-    checkOwnership()
+    checkOwnership();
 
     return () => {
-      isMounted = false
-    }
-  }, [venueId])
+      isMounted = false;
+    };
+  }, [venueId]);
 
   const handleDelete = async () => {
-    setIsDeleting(true)
+    setIsDeleting(true);
 
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       if (!token) {
         toast.error("Authentication required", {
           description: "You must be logged in to delete venues",
-        })
-        return
+        });
+        return;
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}`, {
@@ -172,44 +168,40 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
           Authorization: `Bearer ${token}`,
           "X-Noroff-API-Key": API_CONFIG.API_KEY,
         },
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete venue")
+        throw new Error("Failed to delete venue");
       }
 
       toast.success("Venue deleted successfully", {
         description: "The venue has been permanently removed.",
-      })
+      });
 
-      router.push("/profile")
+      router.push("/profile");
     } catch (error) {
-      console.error("Error deleting venue:", error)
+      console.error("Error deleting venue:", error);
       toast.error("Failed to delete venue", {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
-      })
+      });
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   // Don't render anything until we're certain
   if (isLoading || isOwner === null) {
-    return null
+    return null;
   }
 
   // Only show the action buttons if the user is definitely the owner
   if (!isOwner) {
-    return null
+    return null;
   }
 
   return (
     <div className="flex gap-2 mt-4">
-      <Button
-        variant="outline"
-        className="flex items-center gap-2"
-        onClick={() => router.push(`/venues/${venueId}/edit`)}
-      >
+      <Button variant="outline" className="flex items-center gap-2" onClick={() => router.push(`/venues/${venueId}/edit`)}>
         <Edit className="h-4 w-4" />
         Edit Venue
       </Button>
@@ -222,17 +214,11 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
         variant="destructive"
         onConfirm={handleDelete}
       >
-        <Button
-          variant="destructive"
-          className="flex items-center gap-2"
-          disabled={isDeleting}
-          aria-label={`Delete venue: ${venueName || "this venue"}`}
-        >
+        <Button variant="destructive" className="flex items-center gap-2" disabled={isDeleting} aria-label={`Delete venue: ${venueName || "this venue"}`}>
           <Trash2 className="h-4 w-4" aria-hidden="true" />
           {isDeleting ? "Deleting..." : "Delete Venue"}
         </Button>
       </ConfirmationDialog>
     </div>
-  )
+  );
 }
-

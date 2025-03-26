@@ -231,13 +231,6 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
               <h2 className="text-2xl font-semibold mb-4 break-words">Book this venue</h2>
               <BookingCalendar venue={venue} existingBookings={bookings} />
             </div>
-
-            {/* Add the verification component for debugging */}
-            {process.env.NODE_ENV !== "production" && (
-              <div className="mt-8 bg-gray-50 p-4 rounded-lg">
-                <VerifyVenueMedia venueId={venue.id} />
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
