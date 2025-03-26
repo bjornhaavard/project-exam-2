@@ -1,205 +1,164 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { API_CONFIG } from "@/app/api-config";
-import ConfirmationDialog from "@/app/components/confirmation-dialog";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Edit, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+import { API_CONFIG } from "@/app/api-config"
+import ConfirmationDialog from "@/app/components/confirmation-dialog"
 
 interface VenueActionsProps {
-  venueId: string;
+  venueId: string
 }
 
 interface UserVenue {
-  id: string;
-  name: string;
-  // Add other properties if needed, but id is the minimum required
+  id: string
+  name: string
 }
 
 export default function VenueActions({ venueId }: VenueActionsProps) {
-  const router = useRouter();
-  const [isOwner, setIsOwner] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [venueName, setVenueName] = useState("");
-  const [debugInfo, setDebugInfo] = useState<string>("");
+  const router = useRouter()
+  const [isOwner, setIsOwner] = useState<boolean | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [venueName, setVenueName] = useState("")
 
-  // Ownership check
+  // Ownership check - optimized to reduce API calls
   useEffect(() => {
-    let isMounted = true; // For cleanup
+    let isMounted = true
 
     async function checkOwnership() {
-      if (!isMounted) return;
-
-      setDebugInfo("Starting ownership check...");
-      setIsLoading(true);
-      setIsOwner(null); // Reset to null while checking
+      if (!isMounted) return
+      setIsLoading(true)
+      setIsOwner(null)
 
       try {
-        // 1. Check if user is logged in
-        const token = localStorage.getItem("token");
+        // Check if user is logged in
+        const token = localStorage.getItem("token")
         if (!token) {
-          setDebugInfo((prev) => prev + "\nNo token found, not logged in");
           if (isMounted) {
-            setIsOwner(false);
-            setIsLoading(false);
+            setIsOwner(false)
+            setIsLoading(false)
           }
-          return;
+          return
         }
 
-        // 2. Get venue name for UI purposes
-        try {
-          const venueResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}`, {
-            headers: {
-              "X-Noroff-API-Key": API_CONFIG.API_KEY,
-            },
-          });
-
-          if (venueResponse.ok) {
-            const venueData = await venueResponse.json();
-            if (venueData.data?.name && isMounted) {
-              setVenueName(venueData.data.name);
-              setDebugInfo((prev) => prev + `\nVenue name: ${venueData.data.name}`);
-            }
-          }
-        } catch (error) {
-          setDebugInfo((prev) => prev + `\nError fetching venue name: ${error}`);
-          // Continue anyway, this is just for UI
-        }
-
-        // 3. Check if user is a venue manager
-        const userData = localStorage.getItem("user");
+        // Check if user is a venue manager
+        const userData = localStorage.getItem("user")
         if (!userData) {
-          setDebugInfo((prev) => prev + "\nNo user data found");
           if (isMounted) {
-            setIsOwner(false);
-            setIsLoading(false);
+            setIsOwner(false)
+            setIsLoading(false)
           }
-          return;
+          return
         }
 
         try {
-          const user = JSON.parse(userData);
-          setDebugInfo((prev) => prev + `\nUser is venue manager: ${user.venueManager}`);
-
-          // If not a venue manager, definitely not the owner
+          const user = JSON.parse(userData)
           if (!user.venueManager) {
             if (isMounted) {
-              setIsOwner(false);
-              setIsLoading(false);
+              setIsOwner(false)
+              setIsLoading(false)
             }
-            return;
+            return
           }
-        } catch (error) {
-          setDebugInfo((prev) => prev + `\nError parsing user data: ${error}`);
+        } catch (_) {
           if (isMounted) {
-            setIsOwner(false);
-            setIsLoading(false);
+            setIsOwner(false)
+            setIsLoading(false)
           }
-          return;
+          return
         }
 
-        // 4. Try to fetch the user's profile with venues
-        try {
-          setDebugInfo((prev) => prev + `\nFetching user's profile with venues`);
+        // SINGLE API CALL: Fetch the venue with owner information
+        // This replaces the multiple calls in the original code
+        const venueResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}?_owner=true`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Noroff-API-Key": API_CONFIG.API_KEY,
+          },
+          cache: "no-store",
+        })
 
+        if (venueResponse.ok) {
+          const venueData = await venueResponse.json()
+
+          // Set venue name for UI
+          if (venueData.data?.name && isMounted) {
+            setVenueName(venueData.data.name)
+          }
+
+          // Check ownership by comparing profile data
+          const profileData = localStorage.getItem("profile")
+          if (profileData && venueData.data?.owner) {
+            const profile = JSON.parse(profileData)
+            const isOwner = profile.email === venueData.data.owner.email
+
+            if (isMounted) {
+              setIsOwner(isOwner)
+              setIsLoading(false)
+              return
+            }
+          }
+        }
+
+        // If we couldn't determine ownership from the venue data,
+        // fall back to checking the user's profile
+        if (isMounted) {
           const profileResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/profiles/me?_venues=true`, {
             headers: {
               Authorization: `Bearer ${token}`,
               "X-Noroff-API-Key": API_CONFIG.API_KEY,
             },
-          });
+            cache: "no-store",
+          })
 
           if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            setDebugInfo((prev) => prev + `\nProfile data received: ${JSON.stringify(profileData.data ? { name: profileData.data.name } : "No data")}`);
+            const profileData = await profileResponse.json()
+            const userVenues: UserVenue[] = profileData.data?.venues || []
+            const isInVenuesList = userVenues.some((venue: UserVenue) => venue.id === venueId)
 
-            // Check if this venue is in the user's venues
-            const userVenues: UserVenue[] = profileData.data?.venues || [];
-
-            setDebugInfo((prev) => prev + `\nUser has ${userVenues.length} venues`);
-            if (userVenues.length > 0) {
-              setDebugInfo((prev) => prev + `\nUser venue IDs: ${userVenues.map((v: UserVenue) => v.id).join(", ")}`);
+            if (isMounted) {
+              setIsOwner(isInVenuesList)
+              setIsLoading(false)
+              return
             }
-
-            const isInVenuesList = userVenues.some((venue: UserVenue) => venue.id === venueId);
-            setDebugInfo((prev) => prev + `\nVenue in user's venues list: ${isInVenuesList}`);
-
-            if (isInVenuesList && isMounted) {
-              setIsOwner(true);
-              setIsLoading(false);
-              return;
-            }
-          } else {
-            setDebugInfo((prev) => prev + `\nFailed to fetch profile: ${profileResponse.status}`);
           }
-        } catch (error) {
-          setDebugInfo((prev) => prev + `\nError fetching profile: ${error}`);
-        }
-
-        // 5. If we couldn't verify through the venues list, try a direct check
-        try {
-          setDebugInfo((prev) => prev + `\nTrying direct venue access check`);
-
-          const directResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}`, {
-            method: "PUT", // Try a PUT request with minimal data to check write access
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-              "X-Noroff-API-Key": API_CONFIG.API_KEY,
-            },
-            body: JSON.stringify({ meta: { wifi: true } }), // Minimal data to update
-          });
-
-          // If this succeeds, the user has write access to the venue
-          const hasWriteAccess = directResponse.ok;
-          setDebugInfo((prev) => prev + `\nDirect write access check: ${hasWriteAccess}`);
-
-          if (hasWriteAccess && isMounted) {
-            setIsOwner(true);
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          setDebugInfo((prev) => prev + `\nError in direct access check: ${error}`);
         }
 
         // If we get here, we couldn't confirm ownership
         if (isMounted) {
-          setIsOwner(false);
-          setIsLoading(false);
+          setIsOwner(false)
+          setIsLoading(false)
         }
       } catch (error) {
-        console.error("Error in venue ownership check:", error);
-        setDebugInfo((prev) => prev + `\nUnhandled error: ${error}`);
+        console.error("Error in venue ownership check:", error)
         if (isMounted) {
-          setIsOwner(false);
-          setIsLoading(false);
+          setIsOwner(false)
+          setIsLoading(false)
         }
       }
     }
 
-    checkOwnership();
+    checkOwnership()
 
-    // Cleanup function
     return () => {
-      isMounted = false;
-    };
-  }, [venueId]); // Only depend on venueId
+      isMounted = false
+    }
+  }, [venueId])
 
   const handleDelete = async () => {
-    setIsDeleting(true);
+    setIsDeleting(true)
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
 
       if (!token) {
         toast.error("Authentication required", {
           description: "You must be logged in to delete venues",
-        });
-        return;
+        })
+        return
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}`, {
@@ -208,40 +167,44 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
           Authorization: `Bearer ${token}`,
           "X-Noroff-API-Key": API_CONFIG.API_KEY,
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Failed to delete venue");
+        throw new Error("Failed to delete venue")
       }
 
       toast.success("Venue deleted successfully", {
         description: "The venue has been permanently removed.",
-      });
+      })
 
-      router.push("/profile");
+      router.push("/profile")
     } catch (error) {
-      console.error("Error deleting venue:", error);
+      console.error("Error deleting venue:", error)
       toast.error("Failed to delete venue", {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
-      });
+      })
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   // Don't render anything until we're certain
   if (isLoading || isOwner === null) {
-    return null;
+    return null
   }
 
   // Only show the action buttons if the user is definitely the owner
   if (!isOwner) {
-    return null;
+    return null
   }
 
   return (
     <div className="flex gap-2 mt-4">
-      <Button variant="outline" className="flex items-center gap-2" onClick={() => router.push(`/venues/${venueId}/edit`)}>
+      <Button
+        variant="outline"
+        className="flex items-center gap-2"
+        onClick={() => router.push(`/venues/${venueId}/edit`)}
+      >
         <Edit className="h-4 w-4" />
         Edit Venue
       </Button>
@@ -254,19 +217,17 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
         variant="destructive"
         onConfirm={handleDelete}
       >
-        <Button variant="destructive" className="flex items-center gap-2" disabled={isDeleting} aria-label={`Delete venue: ${venueName || "this venue"}`}>
+        <Button
+          variant="destructive"
+          className="flex items-center gap-2"
+          disabled={isDeleting}
+          aria-label={`Delete venue: ${venueName || "this venue"}`}
+        >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
           {isDeleting ? "Deleting..." : "Delete Venue"}
         </Button>
       </ConfirmationDialog>
-
-      {/* Debug information */}
-      {debugInfo && (
-        <div className="fixed bottom-4 right-4 p-2 bg-gray-100 rounded text-xs font-mono text-gray-800 whitespace-pre-wrap max-w-xs max-h-60 overflow-auto z-50 border border-gray-300">
-          <p className="font-bold mb-1">Debug Info:</p>
-          {debugInfo}
-        </div>
-      )}
     </div>
-  );
+  )
 }
+

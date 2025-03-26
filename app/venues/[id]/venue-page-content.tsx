@@ -1,132 +1,142 @@
-import { notFound } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wifi, Car, Coffee, Dog } from "lucide-react";
-import BookingCalendar from "./booking-calendar";
-import VenueActions from "./venue-actions";
-import { API_CONFIG } from "@/app/api-config";
-import VenueImageGallery from "./venue-image-gallery";
+import { notFound } from "next/navigation"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Wifi, Car, Coffee, Dog } from "lucide-react"
+import BookingCalendar from "./booking-calendar"
+import VenueActions from "./venue-actions"
+import { API_CONFIG } from "@/app/api-config"
+import VenueImageGallery from "./venue-image-gallery"
 
 interface Venue {
-  id: string;
-  name: string;
-  description: string;
-  media: { url: string; alt: string }[];
-  price: number;
-  maxGuests: number;
-  rating: number;
-  created: string;
-  updated: string;
+  id: string
+  name: string
+  description: string
+  media: { url: string; alt: string }[]
+  price: number
+  maxGuests: number
+  rating: number
+  created: string
+  updated: string
   meta: {
-    wifi: boolean;
-    parking: boolean;
-    breakfast: boolean;
-    pets: boolean;
-  };
+    wifi: boolean
+    parking: boolean
+    breakfast: boolean
+    pets: boolean
+  }
   location: {
-    address: string;
-    city: string;
-    zip: string;
-    country: string;
-    continent: string | null;
-    lat: number;
-    lng: number;
-  };
+    address: string
+    city: string
+    zip: string
+    country: string
+    continent: string | null
+    lat: number
+    lng: number
+  }
   _count?: {
-    bookings: number;
-  };
-  bookings?: Booking[]; // Add this for when we fetch venue with bookings
+    bookings: number
+  }
+  bookings?: Booking[] // Add this for when we fetch venue with bookings
 }
 
 interface Booking {
-  id: string;
-  dateFrom: string;
-  dateTo: string;
-  guests: number;
-  created: string;
-  updated: string;
+  id: string
+  dateFrom: string
+  dateTo: string
+  guests: number
+  created: string
+  updated: string
   venue?: {
-    id: string;
-    name: string;
-  };
-}
-
-interface ApiResponse {
-  data: Venue;
-  meta: {
-    isSuccess: boolean;
-  };
-}
-
-interface VenuePageContentProps {
-  id: string;
-}
-
-async function getVenue(id: string): Promise<Venue> {
-  try {
-    console.log(`Fetching venue with ID: ${id}`);
-
-    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}`;
-    console.log(`API URL: ${url}`);
-
-    const res = await fetch(url, {
-      headers: {
-        "X-Noroff-API-Key": API_CONFIG.API_KEY,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      console.error(`Failed to fetch venue: ${res.status} ${res.statusText}`);
-      notFound();
-    }
-
-    const data: ApiResponse = await res.json();
-    return data.data;
-  } catch (error) {
-    console.error("Error fetching venue:", error);
-    notFound();
+    id: string
+    name: string
   }
 }
 
-async function getVenueBookings(id: string): Promise<Booking[]> {
+interface ApiResponse {
+  data: Venue
+  meta: {
+    isSuccess: boolean
+  }
+}
+
+interface VenuePageContentProps {
+  id: string
+}
+
+// Single function to get venue with bookings included
+async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[] }> {
   try {
-    // Get venue with bookings included
-    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}?_bookings=true`;
-    console.log(`Fetching venue with bookings: ${url}`);
+    console.log(`Fetching venue with ID: ${id} (including bookings)`)
+
+    // Include _bookings=true parameter to get bookings in a single request
+    const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}?_bookings=true`
+    console.log(`API URL: ${url}`)
 
     const res = await fetch(url, {
       headers: {
         "X-Noroff-API-Key": API_CONFIG.API_KEY,
       },
       cache: "no-store",
-    });
+    })
 
     if (!res.ok) {
-      console.error(`Failed to fetch venue with bookings: ${res.status} ${res.statusText}`);
-      return []; // Return empty array if we can't fetch bookings
+      console.error(`Failed to fetch venue: ${res.status} ${res.statusText}`)
+      notFound()
     }
 
-    const data = await res.json();
+    const data: ApiResponse = await res.json()
 
-    // Check if bookings data exists
-    if (data.data && data.data.bookings && Array.isArray(data.data.bookings)) {
-      return data.data.bookings;
+    // Extract bookings from the response or provide an empty array
+    const bookings = data.data.bookings || []
+
+    // Log the media URLs to help debug the image issue
+    console.log("Venue media from API:", JSON.stringify(data.data.media))
+
+    // Store the venue data in sessionStorage to preserve it across page refreshes
+    // This helps prevent the API from overriding our images
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(`venue_${id}`, JSON.stringify(data.data))
+      } catch (e) {
+        console.error("Failed to store venue in sessionStorage:", e)
+      }
     }
 
-    return []; // Return empty array if no bookings found
+    return {
+      venue: data.data,
+      bookings: bookings,
+    }
   } catch (error) {
-    console.error("Error fetching venue bookings:", error);
-    return [];
+    console.error("Error fetching venue:", error)
+    notFound()
   }
 }
 
 export default async function VenuePageContent({ id }: VenuePageContentProps) {
-  console.log(`Rendering venue page for ID: ${id}`);
+  console.log(`Rendering venue page for ID: ${id}`)
 
   try {
-    // Fetch venue data
-    const venue = await getVenue(id);
-    const bookings = await getVenueBookings(id);
+    // Check if we're coming from the venue list and have cached data
+    let venue: Venue | null = null
+    let bookings: Booking[] = []
+
+    // Try to get venue from sessionStorage first
+    if (typeof window !== "undefined") {
+      try {
+        const cachedVenue = sessionStorage.getItem(`venue_${id}`)
+        if (cachedVenue) {
+          venue = JSON.parse(cachedVenue)
+          console.log("Using cached venue data from sessionStorage")
+        }
+      } catch (e) {
+        console.error("Failed to retrieve venue from sessionStorage:", e)
+      }
+    }
+
+    // If no cached venue, fetch from API
+    if (!venue) {
+      const result = await getVenue(id)
+      venue = result.venue
+      bookings = result.bookings
+    }
 
     return (
       <div className="container mx-auto px-4 py-8">
@@ -196,7 +206,12 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
                       <span>Rating</span>
                       <div className="flex items-center">
                         {venue.rating.toFixed(1)}
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500 ml-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="w-5 h-5 text-yellow-500 ml-1"
+                        >
                           <path
                             fillRule="evenodd"
                             d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
@@ -224,9 +239,10 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
           </CardContent>
         </Card>
       </div>
-    );
+    )
   } catch (error) {
-    console.error("Error in venue page:", error);
-    notFound();
+    console.error("Error in venue page:", error)
+    notFound()
   }
 }
+
