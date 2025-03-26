@@ -5,6 +5,8 @@ import BookingCalendar from "./booking-calendar";
 import VenueActions from "./venue-actions";
 import { API_CONFIG } from "@/app/api-config";
 import VenueImageGallery from "./venue-image-gallery";
+// Import the verification component at the top
+import VerifyVenueMedia from "@/app/components/verify-venue-media";
 
 interface Venue {
   id: string;
@@ -81,6 +83,13 @@ async function getVenue(id: string): Promise<Venue> {
     }
 
     const data: ApiResponse = await res.json();
+    // In the getVenue function, add this log before returning the data:
+    console.log("Venue data from API:", data.data);
+    if (data.data.media && data.data.media.length > 0) {
+      console.log("Venue has media:", JSON.stringify(data.data.media));
+    } else {
+      console.log("Venue has no media, might use default image");
+    }
     return data.data;
   } catch (error) {
     console.error("Error fetching venue:", error);
@@ -221,6 +230,13 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
               <h2 className="text-2xl font-semibold mb-4 break-words">Book this venue</h2>
               <BookingCalendar venue={venue} existingBookings={bookings} />
             </div>
+
+            {/* Add the verification component for debugging */}
+            {process.env.NODE_ENV !== "production" && (
+              <div className="mt-8 bg-gray-50 p-4 rounded-lg">
+                <VerifyVenueMedia venueId={venue.id} />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

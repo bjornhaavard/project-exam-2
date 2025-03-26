@@ -199,58 +199,76 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayedVenues.map((venue) => (
-          <Card key={venue.id} className="flex flex-col overflow-hidden">
-            <CardHeader className="space-y-2 p-4">
-              <div className="w-full overflow-hidden">
-                <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem] break-words overflow-hidden">{venue.name}</CardTitle>
-              </div>
-              <CardDescription className="line-clamp-1 overflow-hidden text-ellipsis">
-                {venue.location.city}, {venue.location.country}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow p-4 pt-0">
-              <div className="relative w-full h-48 mb-4 z-0 cursor-pointer overflow-hidden group" onClick={() => openGallery(venue, 0)}>
-                <Image
-                  src={venue.media[0]?.url || "/placeholder.svg"}
-                  alt={venue.media[0]?.alt || venue.name}
-                  width={500}
-                  height={300}
-                  className="rounded-md w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                  unoptimized
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/placeholder.svg";
-                  }}
-                />
-                {venue.media.length > 1 && <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">+{venue.media.length - 1} more</div>}
-                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-              </div>
-              <p className="text-sm line-clamp-3 overflow-hidden">{venue.description}</p>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4 p-4">
-              <div className="flex justify-between items-center w-full">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-semibold">${venue.price}</span>
-                  <span className="text-sm text-gray-500">per night</span>
+        {displayedVenues.map((venue) => {
+          console.log(`Venue ${venue.id} media:`, venue.media);
+          if (venue.media && venue.media.length > 0) {
+            console.log(`Using image URL: ${venue.media[0]?.url}`);
+          } else {
+            console.log(`No media for venue ${venue.id}, using placeholder`);
+          }
+          return (
+            <Card key={venue.id} className="flex flex-col overflow-hidden">
+              <CardHeader className="space-y-2 p-4">
+                <div className="w-full overflow-hidden">
+                  <CardTitle className="text-xl line-clamp-2 min-h-[3.5rem] break-words overflow-hidden">{venue.name}</CardTitle>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm">{venue.rating.toFixed(1)}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500">
-                    <path
-                      fillRule="evenodd"
-                      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                <CardDescription className="line-clamp-1 overflow-hidden text-ellipsis">
+                  {venue.location.city}, {venue.location.country}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow p-4 pt-0">
+                <div className="relative w-full h-48 mb-4 z-0 cursor-pointer overflow-hidden group" onClick={() => openGallery(venue, 0)}>
+                  {venue.media && venue.media.length > 0 ? (
+                    <>
+                      <Image
+                        src={venue.media[0]?.url || "/placeholder.svg"}
+                        alt={venue.media[0]?.alt || venue.name}
+                        width={500}
+                        height={300}
+                        className="rounded-md w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                        unoptimized
+                        onError={(e) => {
+                          console.error("Image failed to load:", venue.id, venue.media?.[0]?.url);
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/placeholder.svg";
+                        }}
+                      />
+                      {process.env.NODE_ENV !== "production" && (
+                        <div className="absolute top-0 left-0 bg-black bg-opacity-70 text-white text-xs p-1">Media URL: {venue.media[0]?.url?.substring(0, 20)}...</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">No image available</div>
+                  )}
+                  {venue.media.length > 1 && <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">+{venue.media.length - 1} more</div>}
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 </div>
-              </div>
-              <Button className="w-full gray-button" variant="outline" onClick={() => handleViewDetails(venue.id)}>
-                View Details
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+                <p className="text-sm line-clamp-3 overflow-hidden">{venue.description}</p>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-4 p-4">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg font-semibold">${venue.price}</span>
+                    <span className="text-sm text-gray-500">per night</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-sm">{venue.rating.toFixed(1)}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-yellow-500">
+                      <path
+                        fillRule="evenodd"
+                        d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <Button className="w-full gray-button" variant="outline" onClick={() => handleViewDetails(venue.id)}>
+                  View Details
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
 
       {hasMore && (

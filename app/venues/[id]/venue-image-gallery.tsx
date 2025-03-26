@@ -43,8 +43,18 @@ export default function VenueImageGallery({ venue }: VenueImageGalleryProps) {
             fill
             className="rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
             unoptimized
+            onError={(e) => {
+              console.error("Main gallery image failed to load:", venue.id, venue.media?.[0]?.url);
+              const target = e.target as HTMLImageElement;
+              target.src = "/placeholder.svg";
+            }}
           />
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+
+          {/* Debug info in development */}
+          {process.env.NODE_ENV !== "production" && (
+            <div className="absolute top-0 left-0 bg-black bg-opacity-70 text-white text-xs p-1 z-10">Media URL: {venue.media[0]?.url?.substring(0, 30)}...</div>
+          )}
         </div>
 
         {/* Additional Images */}
@@ -58,6 +68,11 @@ export default function VenueImageGallery({ venue }: VenueImageGalleryProps) {
                   fill
                   className="rounded-md object-cover transition-transform duration-300 group-hover:scale-110"
                   unoptimized
+                  onError={(e) => {
+                    console.error(`Additional gallery image ${index + 1} failed to load:`, venue.id, image.url);
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/placeholder.svg";
+                  }}
                 />
                 <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
               </div>
