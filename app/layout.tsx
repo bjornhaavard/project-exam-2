@@ -6,7 +6,6 @@ import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import { Toaster } from "sonner";
 import { AuthNotificationProvider } from "./context/auth-notification-context";
-import DebugProfile from "./components/debug-profile";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,7 +45,6 @@ export default function RootLayout({
             <Toaster />
           </main>
           <Footer />
-          <DebugProfile />
         </AuthNotificationProvider>
       </body>
     </html>

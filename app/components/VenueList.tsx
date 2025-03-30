@@ -77,8 +77,6 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
         // Determine which API endpoint to use based on whether there's a search query
         const apiUrl = searchQuery ? `${API_CONFIG.BASE_URL}/holidaze/venues/search?q=${encodeURIComponent(searchQuery)}` : `${API_CONFIG.BASE_URL}/holidaze/venues?sort=created&sortOrder=desc`;
 
-        console.log(`Fetching venues from: ${apiUrl}`);
-
         const res = await fetch(apiUrl, {
           headers: {
             "X-Noroff-API-Key": API_CONFIG.API_KEY,
@@ -92,11 +90,6 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
         }
 
         const data: ApiResponse = await res.json();
-
-        // Log the media URLs from the first few venues for debugging
-        if (data.data.length > 0) {
-          console.log("Sample venue media from list:", JSON.stringify(data.data[0].media));
-        }
 
         setVenues(data.data);
         setIsSearchResults(!!searchQuery);

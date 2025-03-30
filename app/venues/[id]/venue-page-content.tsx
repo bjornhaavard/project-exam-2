@@ -64,11 +64,8 @@ interface VenuePageContentProps {
 // Single function to get venue with bookings included
 async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[] }> {
   try {
-    console.log(`Fetching venue with ID: ${id} (including bookings)`);
-
     // Include _bookings=true parameter to get bookings in a single request
     const url = `${API_CONFIG.BASE_URL}/holidaze/venues/${id}?_bookings=true`;
-    console.log(`API URL: ${url}`);
 
     const res = await fetch(url, {
       headers: {
@@ -86,9 +83,6 @@ async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[]
 
     // Extract bookings from the response or provide an empty array
     const bookings = data.data.bookings || [];
-
-    // Log the media URLs to help debug the image issue
-    console.log("Venue media from API:", JSON.stringify(data.data.media));
 
     // Store the venue data in sessionStorage to preserve it across page refreshes
     // This helps prevent the API from overriding our images
@@ -111,8 +105,6 @@ async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[]
 }
 
 export default async function VenuePageContent({ id }: VenuePageContentProps) {
-  console.log(`Rendering venue page for ID: ${id}`);
-
   try {
     // Check if we're coming from the venue list and have cached data
     let venue: Venue | null = null;
@@ -124,7 +116,6 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
         const cachedVenue = sessionStorage.getItem(`venue_${id}`);
         if (cachedVenue) {
           venue = JSON.parse(cachedVenue);
-          console.log("Using cached venue data from sessionStorage");
         }
       } catch (e) {
         console.error("Failed to retrieve venue from sessionStorage:", e);

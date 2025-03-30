@@ -126,29 +126,6 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
         },
   });
 
-  // Function to ensure URL is in the correct Unsplash format
-  const formatUnsplashUrl = (url: string): string => {
-    if (!url) return "";
-
-    // If it's already an Unsplash URL with parameters, return as is
-    if (url.includes("images.unsplash.com") && url.includes("crop=entropy")) {
-      return url;
-    }
-
-    // If it's an Unsplash URL without parameters, add them
-    if (url.includes("images.unsplash.com") && !url.includes("?")) {
-      return `${url}?crop=entropy&fit=crop&h=900&q=80&w=1600`;
-    }
-
-    // If it's an Unsplash photo ID only
-    if (url.match(/^[a-zA-Z0-9_-]+$/) && url.length > 10) {
-      return `https://images.unsplash.com/photo-${url}?crop=entropy&fit=crop&h=900&q=80&w=1600`;
-    }
-
-    // Otherwise return as is (though it might not work)
-    return url;
-  };
-
   // Function to prepare form data for API
   const prepareFormData = (data: VenueFormValues): CreateVenueData | UpdateVenueData => {
     // Create an empty media array
@@ -156,34 +133,25 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
 
     // Only add media items with non-empty URLs
     if (data.mediaUrl1 && data.mediaUrl1.trim() !== "") {
-      const formattedUrl = formatUnsplashUrl(data.mediaUrl1.trim());
       media.push({
-        url: formattedUrl,
+        url: data.mediaUrl1.trim(),
         alt: data.mediaAlt1 || data.name,
       });
-      console.log("Added image 1:", formattedUrl);
     }
 
     if (data.mediaUrl2 && data.mediaUrl2.trim() !== "") {
-      const formattedUrl = formatUnsplashUrl(data.mediaUrl2.trim());
       media.push({
-        url: formattedUrl,
+        url: data.mediaUrl2.trim(),
         alt: data.mediaAlt2 || data.name,
       });
-      console.log("Added image 2:", formattedUrl);
     }
 
     if (data.mediaUrl3 && data.mediaUrl3.trim() !== "") {
-      const formattedUrl = formatUnsplashUrl(data.mediaUrl3.trim());
       media.push({
-        url: formattedUrl,
+        url: data.mediaUrl3.trim(),
         alt: data.mediaAlt3 || data.name,
       });
-      console.log("Added image 3:", formattedUrl);
     }
-
-    // Log the media array for debugging
-    console.log("Media array being sent:", JSON.stringify(media));
 
     // Return the formatted data
     return {
@@ -214,7 +182,6 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
   // Handle form submission
   async function onSubmit(data: VenueFormValues) {
     setIsLoading(true);
-    console.log("Form submitted with values:", data);
 
     try {
       const token = localStorage.getItem("token");
@@ -228,14 +195,11 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
       }
 
       const formattedData = prepareFormData(data);
-      console.log("SENDING REQUEST:", JSON.stringify(formattedData));
 
       // Determine API endpoint and method based on mode
       const endpoint = mode === "create" ? `${API_CONFIG.BASE_URL}/holidaze/venues` : `${API_CONFIG.BASE_URL}/holidaze/venues/${venue?.id}`;
 
       const method = mode === "create" ? "POST" : "PUT";
-
-      console.log(`Making ${method} request to ${endpoint}`);
 
       const response = await fetch(endpoint, {
         method,
@@ -249,33 +213,12 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
 
       // Get the raw response text first for debugging
       const responseText = await response.text();
-      console.log("Raw API response:", responseText);
 
       // Parse the response text back to JSON
       const responseData = responseText ? JSON.parse(responseText) : {};
-      console.log("RECEIVED RESPONSE:", JSON.stringify(responseData));
 
       if (!response.ok) {
         throw new Error(responseData.errors?.[0]?.message || `Failed to ${mode} venue`);
-      }
-
-      // Check if the API changed our image URLs
-      if (responseData.data && responseData.data.media && Array.isArray(responseData.data.media)) {
-        console.log("API RESPONSE MEDIA:");
-        responseData.data.media.forEach((item: { url?: string; alt?: string }, index: number) => {
-          console.log(`Image ${index + 1}:`, item.url || "No URL");
-          if (formattedData.media && Array.isArray(formattedData.media) && formattedData.media[index]) {
-            const originalUrl = formattedData.media[index].url;
-            const responseUrl = item.url || "";
-            console.log(`Original: ${originalUrl}`);
-            console.log(`Response: ${responseUrl}`);
-            console.log(`MATCH: ${originalUrl === responseUrl}`);
-
-            if (originalUrl !== responseUrl) {
-              console.log("WARNING: API changed the image URL!");
-            }
-          }
-        });
       }
 
       // Show success notification
@@ -347,11 +290,6 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
     } finally {
       setIsDeleting(false);
     }
-  }
-
-  // Log if the venue already has media when editing
-  if (mode === "edit" && venue?.media) {
-    console.log("Original venue media:", JSON.stringify(venue.media));
   }
 
   return (
@@ -544,16 +482,6 @@ export default function VenueForm({ venue, mode }: VenueFormProps) {
                     />
                   </div>
                 </div>
-              </div>
-
-              <div className="p-4 bg-blue-50 rounded-md">
-                <h4 className="font-medium text-blue-800">Image Tips:</h4>
-                <ul className="list-disc ml-5 mt-2 text-sm text-blue-700">
-                  <li>The API appears to only accept certain Unsplash images</li>
-                  <li>Try using this exact format: https://images.unsplash.com/photo-ID?parameters</li>
-                  <li>Example: {`https://images.unsplash.com/photo-1629140727571-9b5c6f6267b4?crop=entropy&fit=crop&h=900&q=80&w=1600`}</li>
-                  <li>You can try other Unsplash photo IDs but keep the same parameters</li>
-                </ul>
               </div>
             </div>
 

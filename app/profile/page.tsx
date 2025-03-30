@@ -79,7 +79,6 @@ const ProfilePage = () => {
 
         // Use the correct API URL structure with API key
         const apiUrl = `${API_CONFIG.BASE_URL}/holidaze/profiles/${username}?_bookings=true&_venues=true`;
-        console.log("Fetching profile from:", apiUrl);
 
         const response = await fetch(apiUrl, {
           method: "GET",
@@ -97,7 +96,6 @@ const ProfilePage = () => {
         }
 
         const data = await response.json();
-        console.log("Profile data:", data);
 
         if (data && data.data) {
           setUser(data.data);
