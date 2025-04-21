@@ -39,7 +39,6 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>("");
   const { showAuthNotification } = useAuthNotification();
 
   const form = useForm<RegisterFormValues>({
@@ -59,7 +58,6 @@ export default function RegisterPage() {
 
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
-    setDebugInfo("Starting registration process...");
 
     try {
       // Prepare the request body with the correct structure
@@ -87,10 +85,6 @@ export default function RegisterPage() {
           : {}),
       };
 
-      // Log the request body for debugging
-      setDebugInfo((prev) => prev + "\nRequest body: " + JSON.stringify(requestBody, null, 2));
-      console.log("Registration request:", requestBody);
-
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
@@ -100,18 +94,10 @@ export default function RegisterPage() {
         body: JSON.stringify(requestBody),
       });
 
-      setDebugInfo((prev) => prev + `\nResponse status: ${response.status}`);
-
       const responseData = await response.json();
-      setDebugInfo((prev) => prev + `\nResponse data: ${JSON.stringify(responseData, null, 2)}`);
 
       if (!response.ok) {
         throw new Error(responseData.errors?.[0]?.message || "Registration failed");
-      }
-
-      // Check if venueManager was set correctly in the response
-      if (responseData.data) {
-        setDebugInfo((prev) => prev + `\nVenue manager in response: ${responseData.data.venueManager}`);
       }
 
       // Use our auth notification system
@@ -121,7 +107,6 @@ export default function RegisterPage() {
       await loginUser(data.email, data.password);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Something went wrong";
-      setDebugInfo((prev) => prev + `\nError: ${errorMessage}`);
 
       toast.error("Registration failed", {
         description: errorMessage,
@@ -134,8 +119,6 @@ export default function RegisterPage() {
   // Function to automatically log in after registration
   async function loginUser(email: string, password: string) {
     try {
-      setDebugInfo((prev) => prev + "\nAttempting automatic login...");
-
       const loginResponse = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -146,7 +129,6 @@ export default function RegisterPage() {
       });
 
       const loginData = await loginResponse.json();
-      setDebugInfo((prev) => prev + `\nLogin response: ${JSON.stringify(loginData, null, 2)}`);
 
       if (!loginResponse.ok) {
         throw new Error(loginData.errors?.[0]?.message || "Login failed");
@@ -166,8 +148,6 @@ export default function RegisterPage() {
           })
         );
 
-        setDebugInfo((prev) => prev + `\nVenue manager status after login: ${loginData.data.venueManager}`);
-
         // Show login notification
         showAuthNotification("login", loginData.data.name);
 
@@ -177,8 +157,7 @@ export default function RegisterPage() {
         // Redirect to profile
         router.push("/profile");
       }
-    } catch (error) {
-      setDebugInfo((prev) => prev + `\nAuto-login error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } catch {
       // If auto-login fails, just redirect to login page
       router.push("/auth/login");
     }
@@ -339,14 +318,6 @@ export default function RegisterPage() {
               </Button>
             </form>
           </Form>
-
-          {/* Debug information */}
-          {debugInfo && (
-            <div className="mt-6 p-4 bg-gray-100 rounded-md">
-              <h3 className="text-sm font-semibold mb-2">Debug Information</h3>
-              <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-60">{debugInfo}</pre>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
