@@ -14,7 +14,6 @@ const LoginDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -25,7 +24,6 @@ const LoginDrawer = () => {
     const handleLoginTrigger = () => {
       setIsOpen(true);
       setError("");
-      setDebugInfo("");
     };
 
     window.addEventListener("triggerLoginDrawer", handleLoginTrigger);
@@ -38,14 +36,12 @@ const LoginDrawer = () => {
   const toggleDrawer = () => {
     setIsOpen(!isOpen);
     setError("");
-    setDebugInfo("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    setDebugInfo("Starting login process...");
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -61,19 +57,8 @@ const LoginDrawer = () => {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    setDebugInfo((prev) => prev + `\nEmail: ${trimmedEmail}`);
-    setDebugInfo((prev) => prev + `\nPassword length: ${trimmedPassword.length} characters`);
-
     try {
       const loginUrl = `${API_CONFIG.BASE_URL}/auth/login`;
-      setDebugInfo((prev) => prev + `\nAttempting to fetch from API: ${loginUrl}`);
-
-      // Show the exact request payload for debugging
-      const payload = JSON.stringify({
-        email: trimmedEmail,
-        password: trimmedPassword,
-      });
-      setDebugInfo((prev) => prev + `\nRequest payload: ${payload}`);
 
       const response = await fetch(loginUrl, {
         method: "POST",
@@ -81,13 +66,13 @@ const LoginDrawer = () => {
           "Content-Type": "application/json",
           "X-Noroff-API-Key": API_CONFIG.API_KEY,
         },
-        body: payload,
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        }),
       });
 
-      setDebugInfo((prev) => prev + `\nAPI response status: ${response.status}`);
-
       const data = await response.json();
-      setDebugInfo((prev) => prev + `\nAPI response: ${JSON.stringify(data, null, 2)}`);
 
       if (!response.ok) {
         throw new Error(data.errors?.[0]?.message || "Login failed");
@@ -95,8 +80,6 @@ const LoginDrawer = () => {
 
       if (data.data?.accessToken) {
         // After successful login, fetch the user profile to get accurate venueManager status
-        setDebugInfo((prev) => prev + `\nFetching user profile to get accurate venueManager status...`);
-
         const profileResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/profiles/${data.data.name}`, {
           headers: {
             Authorization: `Bearer ${data.data.accessToken}`,
@@ -104,15 +87,10 @@ const LoginDrawer = () => {
           },
         });
 
-        if (!profileResponse.ok) {
-          setDebugInfo((prev) => prev + `\nWarning: Could not fetch profile data. Status: ${profileResponse.status}`);
-        } else {
+        if (profileResponse.ok) {
           const profileData = await profileResponse.json();
-          setDebugInfo((prev) => prev + `\nProfile data: ${JSON.stringify(profileData.data, null, 2)}`);
-
           // Use venueManager status from profile data
           data.data.venueManager = profileData.data.venueManager;
-          setDebugInfo((prev) => prev + `\nUpdated venueManager status: ${data.data.venueManager}`);
         }
 
         // Store auth data in localStorage
@@ -128,11 +106,6 @@ const LoginDrawer = () => {
           })
         );
 
-        setDebugInfo((prev) => prev + "\nLogin successful, redirecting...");
-
-        // Add debug info about venue manager status
-        setDebugInfo((prev) => prev + `\nVenue Manager status: ${data.data.venueManager}`);
-
         // Show login notification
         showAuthNotification("login", data.data.name);
 
@@ -147,9 +120,7 @@ const LoginDrawer = () => {
         throw new Error("No access token received");
       }
     } catch (error: unknown) {
-      console.error("Login error:", error);
       setError(error instanceof Error ? error.message : "Network error. Please check your connection and try again.");
-      setDebugInfo((prev) => prev + `\nError: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }
@@ -233,14 +204,6 @@ const LoginDrawer = () => {
               </button>
             </div>
           </form>
-
-          {/* Debug section */}
-          {debugInfo && (
-            <div className="mt-4 p-2 bg-gray-800 text-xs text-gray-300 rounded whitespace-pre-wrap overflow-auto max-h-40">
-              <p className="font-bold mb-1">Debug Info:</p>
-              {debugInfo}
-            </div>
-          )}
         </div>
       </div>
     </>
