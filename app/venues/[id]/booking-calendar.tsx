@@ -202,9 +202,6 @@ export default function BookingCalendar({ venue, existingBookings }: BookingCale
         throw new Error(bookingData.errors?.[0]?.message || "Failed to create booking");
       }
 
-      // Log the booking data for debugging
-      console.log("Booking successful:", bookingData);
-
       setSuccess("Booking successful! You can view your bookings in your profile.");
 
       // Reset form

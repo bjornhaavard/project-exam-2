@@ -128,7 +128,7 @@ const LoginDrawer = () => {
 
   return (
     <>
-      <button onClick={toggleDrawer} className="gray-button">
+      <button onClick={toggleDrawer} className="blue-button w-full">
         Login
       </button>
       <div
@@ -191,12 +191,12 @@ const LoginDrawer = () => {
             </div>
             <div className="flex items-center justify-between">
               <Link href="/auth/register">
-                <button className="bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={() => setIsOpen(false)}>
+                <button className="green-button text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onClick={() => setIsOpen(false)}>
                   Register
                 </button>
               </Link>
               <button
-                className={`bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`blue-button text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 type="submit"
                 disabled={isLoading}
               >
