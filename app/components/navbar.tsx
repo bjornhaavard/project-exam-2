@@ -197,7 +197,7 @@ const Navbar = () => {
                 Update Profile
               </Link>
               {user.venueManager && (
-                <Link href="/venues/create" className="gray-button" onClick={() => setIsOpen(false)}>
+                <Link href="/venues/create" className="block w-full text-center py-2 text-white hover:bg-gray-700 rounded" onClick={() => setIsOpen(false)}>
                   Create Venue
                 </Link>
               )}
