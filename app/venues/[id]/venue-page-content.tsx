@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wifi, Car, Coffee, Dog } from "lucide-react";
 import BookingCalendar from "./booking-calendar";
-import VenueActions from "./venue-actions";
 import { API_CONFIG } from "@/app/api-config";
 import VenueImageGallery from "./venue-image-gallery";
 
@@ -85,7 +84,7 @@ async function getVenue(id: string): Promise<{ venue: Venue; bookings: Booking[]
     const bookings = data.data.bookings || [];
 
     // Store the venue data in sessionStorage to preserve it across page refreshes
-    // This helps prevent the API from overriding our images
+
     if (typeof window !== "undefined") {
       try {
         sessionStorage.setItem(`venue_${id}`, JSON.stringify(data.data));
@@ -139,9 +138,6 @@ export default async function VenuePageContent({ id }: VenuePageContentProps) {
             <CardDescription className="text-lg overflow-hidden text-ellipsis">
               {venue.location.address}, {venue.location.city}, {venue.location.country}
             </CardDescription>
-
-            {/* Add the VenueActions component */}
-            <VenueActions venueId={venue.id} />
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Image Gallery Component */}

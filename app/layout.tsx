@@ -7,16 +7,29 @@ import Footer from "./components/footer";
 import { Toaster } from "sonner";
 import { AuthNotificationProvider } from "./context/auth-notification-context";
 
+/**
+ * Geist Sans font configuration
+ * This sets up the Geist Sans font with Latin subset and makes it available as a CSS variable
+ */
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+/**
+ * Geist Mono font configuration
+ * This sets up the Geist Mono font with Latin subset and makes it available as a CSS variable
+ */
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
+/**
+ * Metadata for the application
+ * This defines SEO-related information and favicon configurations
+ * @type {Metadata}
+ */
 export const metadata: Metadata = {
   title: "Holidayz",
   description: "Here you can find your next holiday destination",
@@ -30,6 +43,14 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
+/**
+ * Root layout component for the application
+ * This component wraps all pages and provides the basic HTML structure
+ *
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to render within the layout
+ * @returns {React.JSX.Element} The root layout structure with navbar, main content, and footer
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

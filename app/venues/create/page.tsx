@@ -6,12 +6,41 @@ import VenueForm from "@/app/components/venue-form";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/app/api-config";
 
+/**
+ * CreateVenuePage component
+ *
+ * This component handles the venue creation page, including:
+ * - Authentication checks
+ * - Venue manager permission verification
+ * - Rendering the venue creation form
+ *
+ * @returns {React.JSX.Element | null} The venue creation page or loading state
+ */
 export default function CreateVenuePage() {
   const router = useRouter();
+  /**
+   * State to track if the user has venue manager permissions
+   */
   const [isVenueManager, setIsVenueManager] = useState(false);
+  /**
+   * State to track loading status during permission checks
+   */
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    /**
+     * Verifies if the current user has venue manager permissions
+     *
+     * This function:
+     * 1. Checks if the user is logged in
+     * 2. Verifies venue manager status from localStorage
+     * 3. Validates the status with the API
+     * 4. Updates localStorage if needed
+     * 5. Redirects unauthorized users
+     *
+     * @async
+     * @returns {Promise<void>}
+     */
     async function checkVenueManagerStatus() {
       // Check if user is logged in
       const userData = localStorage.getItem("user");
@@ -82,6 +111,9 @@ export default function CreateVenuePage() {
     checkVenueManagerStatus();
   }, [router]);
 
+  /**
+   * Render loading spinner while checking permissions
+   */
   if (isLoading) {
     return (
       <div className="container mx-auto p-8 flex justify-center items-center min-h-[50vh]">
@@ -93,10 +125,17 @@ export default function CreateVenuePage() {
     );
   }
 
+  /**
+   * Return null if user is not a venue manager
+   * The useEffect will handle redirection
+   */
   if (!isVenueManager) {
     return null; // Will redirect in useEffect
   }
 
+  /**
+   * Render the venue creation form for authorized users
+   */
   return (
     <div className="container mx-auto px-4 py-8">
       <VenueForm mode="create" />
