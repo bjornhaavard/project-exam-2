@@ -1,6 +1,6 @@
 # Holidaze - Venue Booking Platform
 
-![Holidaze Screenshot](/public/images/holidaze-screen.png)
+![Holidaze Screenshot](https://raw.githubusercontent.com/bjornhaavard/project-exam-2/main/public/images/holidaze-screen.png)
 
 ## Overview
 
