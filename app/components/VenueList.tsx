@@ -130,7 +130,6 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
     setGalleryOpen(true);
   };
 
-  // Loading skeleton directly in the component
   if (isLoading) {
     return (
       <div>
