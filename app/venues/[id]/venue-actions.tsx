@@ -73,7 +73,7 @@ export default function VenueActions({ venueId }: VenueActionsProps) {
         }
 
         // SINGLE API CALL: Fetch the venue with owner information
-        // This replaces the multiple calls in the original code
+
         const venueResponse = await fetch(`${API_CONFIG.BASE_URL}/holidaze/venues/${venueId}?_owner=true`, {
           headers: {
             Authorization: `Bearer ${token}`,
