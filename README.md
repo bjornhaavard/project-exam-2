@@ -1,6 +1,6 @@
 # Holidaze - Venue Booking Platform
 
-![Holidaze Screenshot](./screenshots/homepage.png)
+![Holidaze Screenshot](./public/images/holidaze-screen.png)
 
 ## Overview
 
