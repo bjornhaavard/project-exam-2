@@ -120,11 +120,11 @@ const Navbar = () => {
             src="/images/holidaze-white-logo.png"
             alt="Holidaze Logo"
             width={150}
-            height={100}
+            height={50}
             priority
             style={{
-              width: "100%", // Responsive width
-              height: "auto", // Maintain aspect ratio
+              width: "150px",
+              height: "50px",
             }}
           />
         </Link>
