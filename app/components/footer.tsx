@@ -3,20 +3,30 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
+/**
+ * Footer component that displays site information, quick links,
+ * and profile-related actions depending on authentication status.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered footer component
+ */
 const Footer = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check authentication status when component mounts and when auth changes
+  /**
+   * Checks if the user is authenticated by looking for a token in localStorage.
+   * Updates the isLoggedIn state accordingly.
+   */
   useEffect(() => {
     const checkAuthStatus = () => {
       const token = localStorage.getItem("token");
       setIsLoggedIn(!!token);
     };
 
-    // Check on mount
+    // Check authentication status on mount
     checkAuthStatus();
 
-    // Listen for auth changes (like login/logout events)
+    // Listen for authentication changes (e.g., login/logout events)
     window.addEventListener("authChange", checkAuthStatus);
     window.addEventListener("storage", checkAuthStatus);
 
@@ -26,15 +36,20 @@ const Footer = () => {
     };
   }, []);
 
-  // Function to scroll to top
+  /**
+   * Scrolls the window to the top smoothly.
+   *
+   * @param {React.MouseEvent<HTMLAnchorElement>} e - The click event
+   */
   const scrollToTop = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Function to trigger the login drawer
+  /**
+   * Dispatches a custom event to trigger the login drawer.
+   */
   const triggerLoginDrawer = () => {
-    // Create and dispatch a custom event that the LoginDrawer component can listen for
     const loginEvent = new CustomEvent("triggerLoginDrawer");
     window.dispatchEvent(loginEvent);
   };

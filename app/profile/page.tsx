@@ -187,7 +187,7 @@ const ProfilePage = () => {
         {/* Banner */}
         <div className="relative h-48 bg-gray-200">
           {user.banner ? (
-            <Image src={user.banner.url || "/placeholder.svg"} alt={user.banner.alt || "Profile banner"} fill className="object-cover" />
+            <Image src={user.banner.url || "/placeholder.svg"} alt={user.banner.alt || "Profile banner"} fill className="object-cover" priority />
           ) : (
             <div className="h-full bg-gradient-to-r from-blue-500 to-purple-600"></div>
           )}

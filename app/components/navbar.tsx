@@ -116,7 +116,17 @@ const Navbar = () => {
     <nav className="bg-gray-800 shadow-xl p-8">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <Image src="/images/holidaze-white-logo.png" alt="Holidaze Logo" width={150} height={100} />
+          <Image
+            src="/images/holidaze-white-logo.png"
+            alt="Holidaze Logo"
+            width={150}
+            height={100}
+            priority
+            style={{
+              width: "100%", // Responsive width
+              height: "auto", // Maintain aspect ratio
+            }}
+          />
         </Link>
 
         {/* Desktop Navigation */}

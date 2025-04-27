@@ -165,6 +165,7 @@ const LoginDrawer = () => {
                 name="email"
                 type="email"
                 placeholder="first.last@stud.noroff.no"
+                autoComplete="email"
                 required
                 autoFocus={true}
                 ref={emailRef}
@@ -181,6 +182,7 @@ const LoginDrawer = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="******************"
+                  autoComplete="current-password"
                   required
                   ref={passwordRef}
                 />

@@ -130,6 +130,7 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
     setGalleryOpen(true);
   };
 
+  // Loading skeleton directly in the component
   if (isLoading) {
     return (
       <div>
@@ -231,7 +232,10 @@ export default function VenueList({ searchQuery = "" }: VenueListProps) {
                   width={500}
                   height={300}
                   className="rounded-md w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                  unoptimized={true}
+                  // Add priority to the first few venues that will be visible without scrolling
+                  priority={displayedVenues.indexOf(venue) < 6} // First 6 venues (2 rows in desktop view)
+                  // Remove unoptimized for better performance
+                  // unoptimized={true}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = "/placeholder.svg";
