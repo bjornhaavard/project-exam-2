@@ -63,6 +63,8 @@ Holidaze is a modern venue booking platform that allows users to browse, book, a
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
+6. Live demo of the site: [Holidaze](http://holidais.netlify.app) 
+
 ## Usage
 
 ### For Customers
